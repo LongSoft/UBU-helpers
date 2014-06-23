@@ -1,0 +1,3 @@
+PROJECT(hexfind)
+SET(HF_SOURCES hexfind.c)
+ADD_EXECUTABLE(hexfind ${HF_SOURCES})

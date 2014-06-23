@@ -1,0 +1,3 @@
+PROJECT(drvver)
+SET(DV_SOURCES drvver.c)
+ADD_EXECUTABLE(drvver ${DV_SOURCES})

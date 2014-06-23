@@ -1,0 +1,3 @@
+PROJECT(findver)
+SET(FV_SOURCES findver.c)
+ADD_EXECUTABLE(findver ${FV_SOURCES})
