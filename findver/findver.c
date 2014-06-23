@@ -100,7 +100,7 @@ uint8_t print_version(const char* prefix, uint8_t* buffer, uint8_t* end,
         if ((unsigned long) (terminate - found - offset) > max_length)
             terminate = found + offset + max_length;
         *terminate = 0x00;
-        printf("%s%s\n", prefix, found);
+        printf("%s%s\n", prefix, found + offset);
         found = find_pattern(found + 1, end, pattern, size);
     }
 
