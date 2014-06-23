@@ -96,13 +96,12 @@ uint8_t print_version(const char* prefix, uint8_t* buffer, uint8_t* end,
     while (found != NULL)
     {
         isFound = 1;
-        found += offset;
-        terminate = find_pattern(found, end, &end_pattern, 1);
-        if ((unsigned long) (terminate - found) > max_length)
-            terminate = found + max_length;
+        terminate = find_pattern(found + offset, end, &end_pattern, 1);
+        if ((unsigned long) (terminate - found - offset) > max_length)
+            terminate = found + offset + max_length;
         *terminate = 0x00;
         printf("%s%s\n", prefix, found);
-        found = find_pattern(found+1, end, pattern, size);
+        found = find_pattern(found + 1, end, pattern, size);
     }
 
     if (isFound)
@@ -130,7 +129,7 @@ int main(int argc, char* argv[])
 
     if (argc < 7)
     {
-        printf("findver v0.2\n"
+        printf("findver v0.3\n"
             "Prints version string found in input file\n\n"
             "Usage: findver prefix pattern offset end_marker max_length FILE\n"
             "Options:\n"
