@@ -349,36 +349,43 @@ int main(int argc, char* argv[])
 		return ERR_SUCCESS; 
 	}
 
-	/* Searching for LANR pattern in file */
-{
-found = find_pattern(buffer, end, lanr_new_pattern, sizeof(lanr_new_pattern));
-if (found)
-{
-	if ((found[LANR_VERSION_NEW_OFFSET] == 4) || (found[LANR_VERSION_NEW_OFFSET] == 0))
-	check = found - LANR_VERSION_NEW_OFFSET;
-}
-else
-{
-found = find_pattern(buffer, end, lanr_old_pattern, sizeof(lanr_old_pattern));
-if (found)
-{
-	if (found[LANR_VERSION_OLD_OFFSET] == 0)
-	check = found - LANR_VERSION_OLD_OFFSET;
-}
-	else
-{
-	printf("     Unknown Realtek LAN version.\n");
-	return ERR_NOT_FOUND;
-}
-}
-/* Printing the version found */
-if (check[+1] != 0)
-	printf("     EFI Realtek UNDI           - %x.%03x %X\n", check[+1] >> 4, check[0], check[-1]);
-else
-	printf("     EFI Realtek UNDI           - %x.%03X\n", check[0] >> 4, check[-1]);
+	/* Searching for LANR pattern in new file */
+	found = find_pattern(buffer, end, lanr_new_pattern, sizeof(lanr_new_pattern));
+	if (found)
+	{
+		if ((found[LANR_VERSION_NEW_OFFSET] == 4) || (found[LANR_VERSION_NEW_OFFSET] == 0))
+		check = found - LANR_VERSION_NEW_OFFSET;
+ 	else {
+		printf("     Unknown Realtek LAN version.\n");
+		return ERR_NOT_FOUND;}
 
-return ERR_SUCCESS; 
-}
+	/* Printing the version found */
+	if (check[+1] != 0) {
+		printf("     EFI Realtek UNDI           - %x.%03x %X\n", check[+1] >> 4, check[0], check[-1]);
+        	return ERR_SUCCESS;}
+	else {
+		printf("     EFI Realtek UNDI           - %x.%03X\n", check[0] >> 4, check[-1]);
+        	return ERR_SUCCESS;}
+	}
+
+	/* Searching for LANR pattern in old file */
+	found = find_pattern(buffer, end, lanr_old_pattern, sizeof(lanr_old_pattern));
+	if (found)
+	{
+		if (found[LANR_VERSION_OLD_OFFSET] == 0)
+		check = found - LANR_VERSION_OLD_OFFSET;
+ 	else {
+		printf("     Unknown Realtek LAN version.\n");
+		return ERR_NOT_FOUND;}
+
+	/* Printing the version found */
+	if (check[+1] != 0) {
+		printf("     EFI Realtek UNDI           - %x.%03x %X\n", check[+1] >> 4, check[0], check[-1]);
+        	return ERR_SUCCESS;}
+	else {
+		printf("     EFI Realtek UNDI           - %x.%03X\n", check[0] >> 4, check[-1]);
+        	return ERR_SUCCESS;}
+	}
 
 	return ERR_NOT_FOUND;
 }
