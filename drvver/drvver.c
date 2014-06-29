@@ -38,6 +38,10 @@ const uint8_t gop_ast_pattern[] = {
 	0x0F, 0x10, 0x0B, 0x0D, 0x10, 0x0B, 0x0C, 0x10, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00
 };
+const uint8_t goprom_ast_pattern[] = {
+	0x00, 0x50, 0x43, 0x49, 0x52
+};
+
 
 /* Offset and length of parts of version string */
 #define GOP_AST_VERSION_OFFSET 57
@@ -169,11 +173,11 @@ int main(int argc, char* argv[])
         printf("drvver v0.8\n");
         printf("Reads versions from input EFI-file\n");
         printf("Usage: drvver DRIVERFILE\n\n");
-        printf("Support Intel GOP, LAN, RST, RSTe drivers.\n"
-		"ASPEED GOP driver.\n"
-		"Realtek LAN driver.\n"
-		"Broadcom LAN driver.\n"
-		"Marvell SATA driver.\n");
+        printf("Support:\n"
+		"GOP driver Intel, ASPEED.\n"
+		"SATA driver Intel Marvell\n"
+		"LAN driver Intel, Realtek, Broadcom\n"
+		);
         return ERR_INVALID_PARAMETER;
     }
 
@@ -291,7 +295,11 @@ int main(int argc, char* argv[])
 		check = found + GOP_AST_VERSION_OFFSET;
 
         /* Printing the version found */
-	printf("     EFI GOP ASPEED             - %x.%02x.%02x\n", check[+1], check[0], check[-1]);
+	found = find_pattern(buffer, end, goprom_ast_pattern, sizeof(goprom_ast_pattern));
+	if (found)
+		printf("     EFI GOP-in-OROM ASPEED     - %x.%02x.%02x\n", check[+1], check[0], check[-1]);
+	else
+		printf("     EFI GOP ASPEED             - %x.%02x.%02x\n", check[+1], check[0], check[-1]);
 
         return ERR_SUCCESS;
     }
