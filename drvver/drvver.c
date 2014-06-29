@@ -13,6 +13,7 @@
 #define ERR_INVALID_PARAMETER 4
 #define ERR_OUT_OF_MEMORY 5
 #define ERR_UNKNOWN_VERSION 6
+#define ERR_UNKNOWN_OPTION    7
 
 /* Intel GOP Driver */
 /* Search pattern: "Intel (R) GOP Driver" as Unicode string */
@@ -31,6 +32,17 @@ const uint8_t gop_pattern[] = {
 #define GOP_MINOR_LENGTH 4
 #define GOP_REVISION_LENGTH 8
 #define GOP_BUILD_LENGTH 10
+
+/* ASPEED GOP Driver */
+/* Search pattern hwx string */
+const uint8_t gop_ast_pattern[] = {
+	0x0F, 0x10, 0x0B, 0x0D, 0x10, 0x0B, 0x0C, 0x10, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00
+};
+
+/* Offset and length of parts of version string */
+#define GOP_AST_VERSION_OFFSET 57
+#define GOP_AST_VERSION_LENGTH 0x3
 
 /* Intel RST Driver */
 /* Search pattern: "Intel (R) RST 1" as Unicode string */
@@ -153,17 +165,25 @@ int main(int argc, char* argv[])
     long read;
 	char has_rev;
     
-    if (argc < 2)
+    if (argc < 3)
     {
-        printf("drvver v0.7\n");
+        printf("drvver v0.8\n");
         printf("Reads versions from input EFI-file\n");
-        printf("Usage: drvver DRIVERFILE\n\n");
+        printf("Usage: drvver -options DRIVERFILE\n\n");
         printf("Support Intel GOP, LAN, RST, RSTe drivers.\nRealtek LAN driver.\nBroadcom LAN driver.\nMarvell SATA driver.\n");
+        printf("Options:\n"
+            "-gop     - GOP Intel, ASPEED\n"
+            "-rst     - Intel RST\n"
+            "-mrvl    - Marvell AHCI/RAID\n"
+            "-intl    - LAN Intel\n"
+            "-bcm     - LAN Broadcpm\n"
+            "-rtk     - LAN Realtek\n"
+            );
         return ERR_INVALID_PARAMETER;
     }
 
     /* Opening file */
-    file = fopen(argv[1], "r+b");
+    file = fopen(argv[2], "r+b");
     if(!file)
     {
         printf("File can't be opened.\n");
@@ -190,13 +210,17 @@ int main(int argc, char* argv[])
         printf("Can't read file.\n");
         return ERR_FILE_READ;
     }
+
     
     /* Searching for GOP pattern in file */
+    if (argv[1][0] != '-')
+        return ERR_INVALID_PARAMETER;
+    else if (!strcmp("gop", argv[1] + 1))
+   {
     end = buffer + filesize - 1;
     found = find_pattern(buffer, end, gop_pattern, sizeof(gop_pattern));
     if (found)
 	{
-	
 		/* Checking for version 2 */
 		check = found + GOP_VERSION_2_OFFSET;
 		if (check[0] == '2')
@@ -262,9 +286,31 @@ int main(int argc, char* argv[])
 		return ERR_UNKNOWN_VERSION;
 	}
 
+	/* Searching for ASPEED GOP pattern in file */
+	found = find_pattern(buffer, end, gop_ast_pattern, sizeof(gop_ast_pattern));
+	if (found)
+	{
+		if ((found[GOP_AST_VERSION_OFFSET] == 37))
+			{check = found + GOP_AST_VERSION_OFFSET; check[-1] = 0x08; check[0] = 0x93; check[1] = 0x00;}
+		else if ((found[GOP_AST_VERSION_OFFSET] == 33))
+			{check = found + GOP_AST_VERSION_OFFSET; check[-1] = 0x00; check[0] = 0x96; check[1] = 0x00;}
+		else if ((found[GOP_AST_VERSION_OFFSET] == 144))
+			{check = found + GOP_AST_VERSION_OFFSET; check[-1] = 0x06; check[0] = 0x97; check[1] = 0x00;}
+		else
+		check = found + GOP_AST_VERSION_OFFSET;
+
+        /* Printing the version found */
+	printf("     EFI GOP ASPEED             - %x.%02x.%02x\n", check[+1], check[0], check[-1]);
+
+        return ERR_SUCCESS;
+    }
+   }
+
 	/* Searching for RST pattern in file */
+    else if (!strcmp("rst1", argv[1] + 1))
+   {
 	found = find_pattern(buffer, end, rst_pattern, sizeof(rst_pattern));
-    if (found)
+	if (found)
 	{
 		found += RST_VERSION_OFFSET;
 		build = (wchar_t*) found;
@@ -277,7 +323,7 @@ int main(int argc, char* argv[])
 
 	/* Searching for RSTe pattern in file */
 	found = find_pattern(buffer, end, rste_pattern, sizeof(rste_pattern));
-    if (found)
+	if (found)
 	{
 		found += RSTE_VERSION_OFFSET;
 		build = (wchar_t*) found;
@@ -287,8 +333,30 @@ int main(int argc, char* argv[])
 
 		return ERR_SUCCESS; 
 	}
+   }
+
+    /* Searching for MSATA pattern in file */
+    else if (!strcmp("mrvl", argv[1] + 1))
+   {
+    found = find_pattern(buffer, end, msata_pattern, sizeof(msata_pattern));
+    if (found)
+    {
+        check = found + MSATA_VERSION_OFFSET;
+
+        /* Printing the version found */
+		found = find_pattern(buffer, end, msatar_pattern, sizeof(msatar_pattern));
+		if (found)
+		printf("     EFI Marvell SATA RAID      - %x.%x.%x.%04x\n", (check[3] >> 4), (check[3] & 0x0F), check[2], *(uint16_t*)check);
+		else
+		printf("     EFI Marvell SATA AHCI      - %x.%x.%x.%04x\n", (check[3] >> 4), (check[3] & 0x0F), check[2], *(uint16_t*)check);
+
+        return ERR_SUCCESS;
+    }
+   }
 
 	/* Searching for LANI pattern in file */
+    else if (!strcmp("intl", argv[1] + 1))
+   {
 	found = find_pattern(buffer, end, lani_pattern, sizeof(lani_pattern));
     if (found)
 	{
@@ -308,24 +376,11 @@ int main(int argc, char* argv[])
 
 		return ERR_SUCCESS; 
 	}
-
-    /* Searching for MSATA pattern in file */
-    found = find_pattern(buffer, end, msata_pattern, sizeof(msata_pattern));
-    if (found)
-    {
-        check = found + MSATA_VERSION_OFFSET;
-
-        /* Printing the version found */
-		found = find_pattern(buffer, end, msatar_pattern, sizeof(msatar_pattern));
-		if (found)
-		printf("     EFI Narvell SATA RAID      - %x.%x.%x.%04x\n", (check[3] >> 4), (check[3] & 0x0F), check[2], *(uint16_t*)check);
-		else
-		printf("     EFI Narvell SATA AHCI      - %x.%x.%x.%04x\n", (check[3] >> 4), (check[3] & 0x0F), check[2], *(uint16_t*)check);
-
-        return ERR_SUCCESS;
-    }
+   }
 
 	/* Searching for LANB pattern in file */
+    else if (!strcmp("bcm", argv[1] + 1))
+   {
 	found = find_pattern(buffer, end, lanb_pattern, sizeof(lanb_pattern));
     if (found)
 	{
@@ -348,8 +403,11 @@ int main(int argc, char* argv[])
 
 		return ERR_SUCCESS; 
 	}
+   }
 
 	/* Searching for LANR pattern in new file */
+    else if (!strcmp("rtk", argv[1] + 1))
+   {
 	found = find_pattern(buffer, end, lanr_new_pattern, sizeof(lanr_new_pattern));
 	if (found)
 	{
@@ -386,6 +444,7 @@ int main(int argc, char* argv[])
 		printf("     EFI Realtek UNDI           - %x.%03X\n", check[0] >> 4, check[-1]);
         	return ERR_SUCCESS;}
 	}
-
+   }
+	return ERR_UNKNOWN_OPTION;
 	return ERR_NOT_FOUND;
 }
