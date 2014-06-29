@@ -13,7 +13,6 @@
 #define ERR_INVALID_PARAMETER 4
 #define ERR_OUT_OF_MEMORY 5
 #define ERR_UNKNOWN_VERSION 6
-#define ERR_UNKNOWN_OPTION    7
 
 /* Intel GOP Driver */
 /* Search pattern: "Intel (R) GOP Driver" as Unicode string */
@@ -165,24 +164,21 @@ int main(int argc, char* argv[])
     long read;
 	char has_rev;
     
-    if (argc < 3)
+    if (argc < 2)
     {
         printf("drvver v0.8\n");
         printf("Reads versions from input EFI-file\n");
-        printf("Usage: drvver -options DRIVERFILE\n\n");
-        printf("Support Intel GOP, LAN, RST, RSTe drivers.\nRealtek LAN driver.\nBroadcom LAN driver.\nMarvell SATA driver.\n");
-        printf("Options:\n"
-            "-gop     - GOP Intel, ASPEED\n"
-            "-sata    - IRST(e), Marvell AHCI/RAID\n"
-            "-intl    - LAN Intel\n"
-            "-bcm     - LAN Broadcpm\n"
-            "-rtk     - LAN Realtek\n"
-            );
+        printf("Usage: drvver DRIVERFILE\n\n");
+        printf("Support Intel GOP, LAN, RST, RSTe drivers.\n"
+		"ASPEED GOP driver.\n"
+		"Realtek LAN driver.\n"
+		"Broadcom LAN driver.\n"
+		"Marvell SATA driver.\n");
         return ERR_INVALID_PARAMETER;
     }
 
     /* Opening file */
-    file = fopen(argv[2], "r+b");
+    file = fopen(argv[1], "r+b");
     if(!file)
     {
         printf("File can't be opened.\n");
@@ -212,10 +208,6 @@ int main(int argc, char* argv[])
 
     
     /* Searching for GOP pattern in file */
-    if (argv[1][0] != '-')
-        return ERR_INVALID_PARAMETER;
-    else if (!strcmp("gop", argv[1] + 1))
-   {
     end = buffer + filesize - 1;
     found = find_pattern(buffer, end, gop_pattern, sizeof(gop_pattern));
     if (found)
@@ -303,11 +295,8 @@ int main(int argc, char* argv[])
 
         return ERR_SUCCESS;
     }
-   }
 
 	/* Searching for RST pattern in file */
-    else if (!strcmp("sata", argv[1] + 1))
-   {
 	found = find_pattern(buffer, end, rst_pattern, sizeof(rst_pattern));
 	if (found)
 	{
@@ -332,7 +321,7 @@ int main(int argc, char* argv[])
 
 		return ERR_SUCCESS; 
 	}
-  
+
     /* Searching for MSATA pattern in file */
     found = find_pattern(buffer, end, msata_pattern, sizeof(msata_pattern));
     if (found)
@@ -348,14 +337,11 @@ int main(int argc, char* argv[])
 
         return ERR_SUCCESS;
     }
-   }
 
 	/* Searching for LANI pattern in file */
-    else if (!strcmp("intl", argv[1] + 1))
-   {
-	found = find_pattern(buffer, end, lani_pattern, sizeof(lani_pattern));
+    found = find_pattern(buffer, end, lani_pattern, sizeof(lani_pattern));
     if (found)
-	{
+    {
 		/* Checking for version 4 */
         if (found[LANI_VERSION_4_OFFSET] == 4)
             check = found + LANI_VERSION_4_OFFSET;
@@ -371,15 +357,12 @@ int main(int argc, char* argv[])
 		printf("     EFI Intel UNDI             - %x.%x.%02x\n", check[0], check[-1], check[-2]);
 
 		return ERR_SUCCESS; 
-	}
-   }
+    }
 
 	/* Searching for LANB pattern in file */
-    else if (!strcmp("bcm", argv[1] + 1))
+   found = find_pattern(buffer, end, lanb_pattern, sizeof(lanb_pattern));
+   if (found)
    {
-	found = find_pattern(buffer, end, lanb_pattern, sizeof(lanb_pattern));
-    if (found)
-	{
 		/* Checking for version 14 */
         if (found[LANB_VERSION_14_OFFSET] == 14)
             check = found + LANB_VERSION_14_OFFSET;
@@ -398,15 +381,12 @@ int main(int argc, char* argv[])
 		printf("     EFI Broadcom UNDI          - %d.%d.%d\n", check[0], check[-1], check[-2]);
 
 		return ERR_SUCCESS; 
-	}
    }
 
 	/* Searching for LANR pattern in new file */
-    else if (!strcmp("rtk", argv[1] + 1))
+   found = find_pattern(buffer, end, lanr_new_pattern, sizeof(lanr_new_pattern));
+   if (found)
    {
-	found = find_pattern(buffer, end, lanr_new_pattern, sizeof(lanr_new_pattern));
-	if (found)
-	{
 		if ((found[LANR_VERSION_NEW_OFFSET] == 4) || (found[LANR_VERSION_NEW_OFFSET] == 0))
 		check = found - LANR_VERSION_NEW_OFFSET;
  	else {
@@ -420,12 +400,12 @@ int main(int argc, char* argv[])
 	else {
 		printf("     EFI Realtek UNDI           - %x.%03X\n", check[0] >> 4, check[-1]);
         	return ERR_SUCCESS;}
-	}
+   }
 
 	/* Searching for LANR pattern in old file */
-	found = find_pattern(buffer, end, lanr_old_pattern, sizeof(lanr_old_pattern));
-	if (found)
-	{
+   found = find_pattern(buffer, end, lanr_old_pattern, sizeof(lanr_old_pattern));
+   if (found)
+   {
 		if (found[LANR_VERSION_OLD_OFFSET] == 0)
 		check = found - LANR_VERSION_OLD_OFFSET;
  	else {
@@ -439,8 +419,6 @@ int main(int argc, char* argv[])
 	else {
 		printf("     EFI Realtek UNDI           - %x.%03X\n", check[0] >> 4, check[-1]);
         	return ERR_SUCCESS;}
-	}
    }
-	return ERR_UNKNOWN_OPTION;
-	return ERR_NOT_FOUND;
+   return ERR_NOT_FOUND;
 }
