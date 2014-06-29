@@ -173,8 +173,7 @@ int main(int argc, char* argv[])
         printf("Support Intel GOP, LAN, RST, RSTe drivers.\nRealtek LAN driver.\nBroadcom LAN driver.\nMarvell SATA driver.\n");
         printf("Options:\n"
             "-gop     - GOP Intel, ASPEED\n"
-            "-rst     - Intel RST\n"
-            "-mrvl    - Marvell AHCI/RAID\n"
+            "-sata    - IRST(e)/SCU/Marvell AHCI/RAID\n"
             "-intl    - LAN Intel\n"
             "-bcm     - LAN Broadcpm\n"
             "-rtk     - LAN Realtek\n"
@@ -307,7 +306,7 @@ int main(int argc, char* argv[])
    }
 
 	/* Searching for RST pattern in file */
-    else if (!strcmp("rst1", argv[1] + 1))
+    else if (!strcmp("sata", argv[1] + 1))
    {
 	found = find_pattern(buffer, end, rst_pattern, sizeof(rst_pattern));
 	if (found)
@@ -333,11 +332,8 @@ int main(int argc, char* argv[])
 
 		return ERR_SUCCESS; 
 	}
-   }
-
+  
     /* Searching for MSATA pattern in file */
-    else if (!strcmp("mrvl", argv[1] + 1))
-   {
     found = find_pattern(buffer, end, msata_pattern, sizeof(msata_pattern));
     if (found)
     {
