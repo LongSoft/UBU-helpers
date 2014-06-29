@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
         printf("Support Intel GOP, LAN, RST, RSTe drivers.\nRealtek LAN driver.\nBroadcom LAN driver.\nMarvell SATA driver.\n");
         printf("Options:\n"
             "-gop     - GOP Intel, ASPEED\n"
-            "-sata    - IRST(e)/SCU/Marvell AHCI/RAID\n"
+            "-sata    - IRST(e), Marvell AHCI/RAID\n"
             "-intl    - LAN Intel\n"
             "-bcm     - LAN Broadcpm\n"
             "-rtk     - LAN Realtek\n"
