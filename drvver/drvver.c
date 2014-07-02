@@ -286,7 +286,7 @@ int main(int argc, char* argv[])
 			build = (wchar_t*) check;
 
 			/* Printing the version found */
-			wprintf(L"     EFI GOP Driver Broadwell   - 5.%s\n", build);
+			wprintf(L"     EFI GOP Driver Broadwell   - 5.5.%s\n", build);
 
 			return ERR_SUCCESS; 
 		}
