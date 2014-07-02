@@ -26,7 +26,8 @@ const uint8_t gop_pattern[] = {
 /* Offset and length of parts of version string */
 #define GOP_VERSION_2_OFFSET 0x98
 #define GOP_VERSION_3_OFFSET 0xA0
-#define GOP_VERSION_5_OFFSET 0xC0
+#define GOP_VERSION_HSW_OFFSET 0xC0
+#define GOP_VERSION_BRW_OFFSET 0xF4
 #define GOP_MAJOR_LENGTH 4
 #define GOP_MINOR_LENGTH 4
 #define GOP_REVISION_LENGTH 8
@@ -170,7 +171,7 @@ int main(int argc, char* argv[])
     
     if (argc < 2)
     {
-        printf("drvver v0.8\n");
+        printf("drvver v0.9\n");
         printf("Reads versions from input EFI-file\n");
         printf("Usage: drvver DRIVERFILE\n\n");
         printf("Support:\n"
@@ -262,8 +263,8 @@ int main(int argc, char* argv[])
 			return ERR_SUCCESS; 
 		}
 
-		/* Checking for version 5 */
-		check = found + GOP_VERSION_5_OFFSET;
+		/* Checking for version 5 Haswell*/
+		check = found + GOP_VERSION_HSW_OFFSET;
 		if (check[0] == '5')
 		{
 			check += GOP_MAJOR_LENGTH;
@@ -273,6 +274,19 @@ int main(int argc, char* argv[])
 
 			/* Printing the version found */
 			wprintf(L"     EFI GOP Driver Haswell     - 5.%s.%s\n", minor, build);
+
+			return ERR_SUCCESS; 
+		}
+
+		/* Checking for version 5 Broadwell*/
+		check = found + GOP_VERSION_BRW_OFFSET;
+		if (check[0] == '5')
+		{
+			check += GOP_MAJOR_LENGTH;
+			build = (wchar_t*) check;
+
+			/* Printing the version found */
+			wprintf(L"     EFI GOP Driver Broadwell   - 5.%s\n", build);
 
 			return ERR_SUCCESS; 
 		}
