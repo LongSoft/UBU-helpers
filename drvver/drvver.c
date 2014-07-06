@@ -171,12 +171,12 @@ int main(int argc, char* argv[])
     
     if (argc < 2)
     {
-        printf("drvver v0.9\n");
+        printf("drvver v0.9.2\n");
         printf("Reads versions from input EFI-file\n");
         printf("Usage: drvver DRIVERFILE\n\n");
         printf("Support:\n"
 		"GOP driver Intel, ASPEED.\n"
-		"SATA driver Intel Marvell\n"
+		"SATA driver Intel, Marvell\n"
 		"LAN driver Intel, Realtek, Broadcom\n"
 		);
         return ERR_INVALID_PARAMETER;
@@ -221,16 +221,15 @@ int main(int argc, char* argv[])
 		check = found + GOP_VERSION_2_OFFSET;
 		if (check[0] == '2')
 		{
-			has_rev = (check[2] == 0x2E);
 			check += GOP_MAJOR_LENGTH;
 			minor = (wchar_t*) check;
 			check += GOP_MINOR_LENGTH;
-			if (has_rev)
+			if ((check[2] == 0x2E) || (check[2] == 0x00) || (check[10] != 0x00))
 			{
-				//revision = (wchar_t*) check;
+			//	revision = (wchar_t*) check;
 				check += GOP_REVISION_LENGTH;
 			}
-			//else
+			// else
 			//	revision = L"0";
 			build = (wchar_t*) check;
 
@@ -244,21 +243,20 @@ int main(int argc, char* argv[])
 		check = found + GOP_VERSION_3_OFFSET;
 		if (check[0] == '3')
 		{
-			has_rev = (check[2] == 0x2E);
 			check += GOP_MAJOR_LENGTH;
 			minor = (wchar_t*) check;
 			check += GOP_MINOR_LENGTH;
-			if (has_rev)
-			{
-				//revision = (wchar_t*) check;
+			if ((check[2] == 0x2E) || (check[2] == 0x00) || (check[10] != 0x00))
+			{ 
+			//	revision = (wchar_t*) check;
 				check += GOP_REVISION_LENGTH;
 			}
-			//else
+			// else
 			//	revision = L"0";
 			build = (wchar_t*) check;
 
 			/* Printing the version found */
-			wprintf(L"     EFI GOP Driver IvyBridge   - 3.%s.%s\n", minor, build);
+			wprintf(L"     EFI GOP Driver IvyBridge   - 3.%s.%s\n", minor,  build);
 
 			return ERR_SUCCESS; 
 		}
