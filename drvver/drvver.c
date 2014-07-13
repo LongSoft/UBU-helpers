@@ -43,7 +43,6 @@ const uint8_t goprom_ast_pattern[] = {
 	0x00, 0x50, 0x43, 0x49, 0x52
 };
 
-
 /* Offset and length of parts of version string */
 #define GOP_AST_VERSION_OFFSET 57
 #define GOP_AST_VERSION_LENGTH 0x3
@@ -65,6 +64,10 @@ const uint8_t rst_pattern[] = {
 const uint8_t rste_pattern[] = {
 	0x49, 0x00, 0x6E, 0x00, 0x74, 0x00, 0x65, 0x00, 0x6C, 0x00, 0x20, 0x00,
 	0x52, 0x00, 0x53, 0x00, 0x54, 0x00, 0x65, 0x00, 0x20, 0x00
+};
+/* Intel RSTe SCU Driver */
+const uint8_t scu_pattern[] = {
+	0x00, 0x53, 0x00, 0x43, 0x00, 0x55, 0x00
 };
 
 #define RSTE_VERSION_OFFSET 0x16
@@ -164,6 +167,7 @@ int main(int argc, char* argv[])
     uint8_t* found;
 	uint8_t* check;
 	wchar_t* minor;
+	wchar_t* revision;
 	wchar_t* build;
     long filesize;
     long read;
@@ -171,7 +175,7 @@ int main(int argc, char* argv[])
     
     if (argc < 2)
     {
-        printf("drvver v0.9.2\n");
+        printf("drvver v0.9.3\n");
         printf("Reads versions from input EFI-file\n");
         printf("Usage: drvver DRIVERFILE\n\n");
         printf("Support:\n"
@@ -336,8 +340,13 @@ int main(int argc, char* argv[])
 		found += RSTE_VERSION_OFFSET;
 		build = (wchar_t*) found;
 		build[RSTE_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
+
 		/* Printing the version found */
-		wprintf(L"     EFI IRSTe SATA             - %s\n", build);
+		found = find_pattern(buffer, end, scu_pattern, sizeof(scu_pattern));
+		if (found)
+			wprintf(L"     EFI IRSTe SCU              - %s\n", build);
+		else
+			wprintf(L"     EFI IRSTe SATA             - %s\n", build);
 
 		return ERR_SUCCESS; 
 	}
