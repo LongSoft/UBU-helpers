@@ -47,6 +47,17 @@ const uint8_t goprom_ast_pattern[] = {
 #define GOP_AST_VERSION_OFFSET 57
 #define GOP_AST_VERSION_LENGTH 0x3
 
+/* AMD GOP Driver */
+const uint8_t amdgop_pattern[] = {
+	0x41, 0x00, 0x4D, 0x00, 0x44, 0x00, 0x20, 0x00, 0x47, 0x00, 0x4F, 0x00,
+	0x50, 0x00, 0x20, 0x00, 0x58, 0x00, 0x36, 0x00, 0x34, 0x00, 0x20, 0x00,
+	0x44, 0x00, 0x72, 0x00, 0x69, 0x00, 0x76, 0x00, 0x65, 0x00, 0x72, 0x00,
+	0x20, 0x00, 0x52, 0x00, 0x65, 0x00, 0x76, 0x00
+};
+
+#define AMDGOP_VERSION_OFFSET 0x2E
+#define AMDGOP_VERSION_LENGTH 0x1A
+
 /* Intel RST Driver */
 /* Search pattern: "Intel (R) RST 1" as Unicode string */
 const uint8_t rst_pattern[] = {
@@ -167,7 +178,6 @@ int main(int argc, char* argv[])
     uint8_t* found;
 	uint8_t* check;
 	wchar_t* minor;
-	wchar_t* revision;
 	wchar_t* build;
     long filesize;
     long read;
@@ -175,11 +185,11 @@ int main(int argc, char* argv[])
     
     if (argc < 2)
     {
-        printf("drvver v0.9.3\n");
+        printf("drvver v0.10\n");
         printf("Reads versions from input EFI-file\n");
         printf("Usage: drvver DRIVERFILE\n\n");
         printf("Support:\n"
-		"GOP driver Intel, ASPEED.\n"
+		"GOP driver Intel, AMD, ASPEED.\n"
 		"SATA driver Intel, Marvell\n"
 		"LAN driver Intel, Realtek, Broadcom\n"
 		);
@@ -295,6 +305,19 @@ int main(int argc, char* argv[])
 
 		/* Unknown version */
 		return ERR_UNKNOWN_VERSION;
+	}
+
+	/* Searching for AMD GOP pattern in file */
+	found = find_pattern(buffer, end, amdgop_pattern, sizeof(amdgop_pattern));
+	if (found)
+	{
+		found += AMDGOP_VERSION_OFFSET;
+		build = (wchar_t*) found;
+		build[AMDGOP_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
+		/* Printing the version found */
+		wprintf(L"     EFI GOP AMD                - %s\n", build);
+
+		return ERR_SUCCESS; 
 	}
 
 	/* Searching for ASPEED GOP pattern in file */
