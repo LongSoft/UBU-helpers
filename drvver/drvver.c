@@ -50,13 +50,12 @@ const uint8_t goprom_ast_pattern[] = {
 /* AMD GOP Driver */
 const uint8_t amdgop_pattern[] = {
 	0x41, 0x00, 0x4D, 0x00, 0x44, 0x00, 0x20, 0x00, 0x47, 0x00, 0x4F, 0x00,
-	0x50, 0x00, 0x20, 0x00, 0x58, 0x00, 0x36, 0x00, 0x34, 0x00, 0x20, 0x00,
-	0x44, 0x00, 0x72, 0x00, 0x69, 0x00, 0x76, 0x00, 0x65, 0x00, 0x72, 0x00,
-	0x20, 0x00, 0x52, 0x00, 0x65, 0x00, 0x76, 0x00
+	0x50, 0x00
 };
 
-#define AMDGOP_VERSION_OFFSET 0x2E
-#define AMDGOP_VERSION_LENGTH 0x1A
+#define AMDGOP1_VERSION_OFFSET 0x2E
+#define AMDGOP2_VERSION_OFFSET 0x3E
+#define AMDGOP_VERSION_LENGTH 0x18
 
 /* Intel RST Driver */
 /* Search pattern: "Intel (R) RST 1" as Unicode string */
@@ -83,6 +82,29 @@ const uint8_t scu_pattern[] = {
 
 #define RSTE_VERSION_OFFSET 0x16
 #define RSTE_VERSION_LENGTH 0x16
+
+/* AMD RAID Driver */
+/* Search pattern: "AMD Raid Channel" as Unicode string */
+const uint8_t amdu_pattern[] = {
+	0x52, 0x00, 0x41, 0x00, 0x49, 0x00, 0x44, 0x00, 0x20, 0x00, 0x55, 0x00,
+	0x74, 0x00, 0x69, 0x00, 0x6C, 0x00, 0x69, 0x00, 0x74, 0x00, 0x79, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x5B, 0x00, 0x52, 0x00,
+	0x65, 0x00, 0x76
+};
+
+#define AMDR_VERSION_OFFSET 0x28
+#define AMDR_VERSION_LENGTH 0x10
+
+/* AMD Utility Driver */
+/* Search pattern: "AMD Utility [Rev" as Unicode string */
+const uint8_t amdr_pattern[] = {
+	0x41, 0x00, 0x4D, 0x00, 0x44, 0x00, 0x20, 0x00, 0x52, 0x00, 0x61, 0x00,
+	0x69, 0x00, 0x64, 0x00, 0x20, 0x00, 0x43, 0x00, 0x68, 0x00, 0x61, 0x00,
+	0x6E, 0x00, 0x6E, 0x00, 0x65, 0x00, 0x6C, 0x00
+};
+
+#define AMDU_VERSION_OFFSET 0x2C
+#define AMDU_VERSION_LENGTH 0x10
 
 /* Intel LAN Driver */
 /* Search pattern HEX String*/
@@ -185,12 +207,12 @@ int main(int argc, char* argv[])
     
     if (argc < 2)
     {
-        printf("drvver v0.10\n");
+        printf("drvver v0.11.1\n");
         printf("Reads versions from input EFI-file\n");
         printf("Usage: drvver DRIVERFILE\n\n");
         printf("Support:\n"
 		"GOP driver Intel, AMD, ASPEED.\n"
-		"SATA driver Intel, Marvell\n"
+		"SATA driver Intel, AMD, Marvell\n"
 		"LAN driver Intel, Realtek, Broadcom\n"
 		);
         return ERR_INVALID_PARAMETER;
@@ -311,7 +333,11 @@ int main(int argc, char* argv[])
 	found = find_pattern(buffer, end, amdgop_pattern, sizeof(amdgop_pattern));
 	if (found)
 	{
-		found += AMDGOP_VERSION_OFFSET;
+		check = found + AMDGOP1_VERSION_OFFSET;
+       		if (check[0] == '1')
+			found += AMDGOP1_VERSION_OFFSET;
+		else
+			found += AMDGOP2_VERSION_OFFSET;
 		build = (wchar_t*) found;
 		build[AMDGOP_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
 		/* Printing the version found */
@@ -352,6 +378,32 @@ int main(int argc, char* argv[])
 		build[RST_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
 		/* Printing the version found */
 		wprintf(L"     EFI IRST SATA              - %s\n", build);
+
+		return ERR_SUCCESS; 
+	}
+
+	/* Searching for AMD RAID pattern in file */
+	found = find_pattern(buffer, end, amdr_pattern, sizeof(amdr_pattern));
+	if (found)
+	{
+		found += AMDR_VERSION_OFFSET;
+		build = (wchar_t*) found;
+		build[AMDR_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
+		/* Printing the version found */
+		wprintf(L"     EFI AMD RAID               - %s\n", build);
+
+		return ERR_SUCCESS; 
+	}
+
+	/* Searching for AMD Utilty pattern in file */
+	found = find_pattern(buffer, end, amdu_pattern, sizeof(amdu_pattern));
+	if (found)
+	{
+		found += AMDU_VERSION_OFFSET;
+		build = (wchar_t*) found;
+		build[AMDU_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
+		/* Printing the version found */
+		wprintf(L"     EFI AMD Utility            - %s\n", build);
 
 		return ERR_SUCCESS; 
 	}
