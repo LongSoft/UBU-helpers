@@ -433,11 +433,12 @@ int main(int argc, char* argv[])
 	        found += AMDU_VERSION_OFFSET;
 		build = (wchar_t*) found;
 		build[AMDU_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
+		
 		/* Printing the version found */
 		if (check[52] != ']')
-		wprintf(L"     EFI AMD Utility            - %s\n", build);
+			wprintf(L"     EFI AMD Utility            - %s\n", build);
 		else
-		printf ("     EFI AMD Utility            - %c.0.0.%c%c\n", check[44], check[48], check[50]);
+			printf ("     EFI AMD Utility            - %c.0.0.%c%c\n", check[44], check[48], check[50]);
 		return ERR_SUCCESS; 
 	}
 
