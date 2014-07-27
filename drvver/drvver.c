@@ -56,6 +56,7 @@ const uint8_t amdgop_pattern[] = {
 #define AMDGOP1_VERSION_OFFSET 0x2E
 #define AMDGOP2_VERSION_OFFSET 0x3E
 #define AMDGOP_VERSION_LENGTH 0x18
+#define AMDGOP_15_VERSION_LENGTH 0x14
 
 /* Intel RST Driver */
 /* Search pattern: "Intel (R) RST 1" as Unicode string */
@@ -156,6 +157,22 @@ const uint8_t lanb_pattern[] = {
 #define LANB_VERSION_16_OFFSET 0x16A
 #define LANB_VERSION_LENGTH 0x3
 
+/* Intel CPU Microcode */
+/* Search pattern HEX String*/
+const uint8_t icpuh_pattern[] = {
+	0x01, 0x00, 0x00, 0x00, 0xC3, 0x06, 0x03, 0x00, 0x00, 0x00
+};
+const uint8_t icpui_pattern[] = {
+	0x01, 0x00, 0x00, 0x00, 0xA9, 0x06, 0x03, 0x00, 0x00, 0x00
+};
+const uint8_t icpus_pattern[] = {
+	0x01, 0x00, 0x00, 0x00, 0xA7, 0x06, 0x02, 0x00, 0x00, 0x00
+};
+
+
+#define CPU_VERSION_OFFSET 0x4C
+#define CPU_VERSION_LENGTH 0x1
+
 /* Implementation of GNU memmem function using Boyer-Moore-Horspool algorithm
 *  Returns pointer to the beginning of found pattern of NULL if not found */
 uint8_t* find_pattern(uint8_t* begin, uint8_t* end, const uint8_t* pattern, size_t plen)
@@ -207,7 +224,7 @@ int main(int argc, char* argv[])
     
     if (argc < 2)
     {
-        printf("drvver v0.11.1\n");
+        printf("drvver v0.12\n");
         printf("Reads versions from input EFI-file\n");
         printf("Usage: drvver DRIVERFILE\n\n");
         printf("Support:\n"
@@ -333,13 +350,26 @@ int main(int argc, char* argv[])
 	found = find_pattern(buffer, end, amdgop_pattern, sizeof(amdgop_pattern));
 	if (found)
 	{
-		check = found + AMDGOP1_VERSION_OFFSET;
-       		if (check[0] == '1')
+		check = found;
+       		if ((check[46] == '1') && (check[50] != '5'))
+		{
 			found += AMDGOP1_VERSION_OFFSET;
-		else
+			build = (wchar_t*) found;
+			build[AMDGOP_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
+		}
+		else if ((check[46] == '1') && (check[50] == '5'))
+		{
+			found += AMDGOP1_VERSION_OFFSET;
+			build = (wchar_t*) found;
+			build[AMDGOP_15_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
+		}
+                else
+		{
 			found += AMDGOP2_VERSION_OFFSET;
-		build = (wchar_t*) found;
-		build[AMDGOP_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
+			build = (wchar_t*) found;
+			build[AMDGOP_15_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
+		}
+
 		/* Printing the version found */
 		wprintf(L"     EFI GOP AMD                - %s\n", build);
 
@@ -399,12 +429,15 @@ int main(int argc, char* argv[])
 	found = find_pattern(buffer, end, amdu_pattern, sizeof(amdu_pattern));
 	if (found)
 	{
-		found += AMDU_VERSION_OFFSET;
+		check = found;
+	        found += AMDU_VERSION_OFFSET;
 		build = (wchar_t*) found;
 		build[AMDU_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
 		/* Printing the version found */
+		if (check[52] != ']')
 		wprintf(L"     EFI AMD Utility            - %s\n", build);
-
+		else
+		printf ("     EFI AMD Utility            - %c.0.0.%c%c\n", check[44], check[48], check[50]);
 		return ERR_SUCCESS; 
 	}
 
@@ -524,5 +557,40 @@ int main(int argc, char* argv[])
 		printf("     EFI Realtek UNDI           - %x.%03X\n", check[0] >> 4, check[-1]);
         	return ERR_SUCCESS;}
    }
-   return ERR_NOT_FOUND;
+
+	/* Searching for CPU pattern LGA1150 */
+//   end = buffer + filesize - 1;
+   found = find_pattern(buffer, end, icpuh_pattern, sizeof(icpuh_pattern));
+   if (found)
+   {
+		check = found - CPU_VERSION_OFFSET;
+
+	/* Printing the version found */
+		printf("     CPU Microcode 0306C3       - %02X\n", check[0]);
+
+        	return ERR_SUCCESS;
+   }
+
+	/* Searching for CPU pattern LGA1155 */
+   found = find_pattern(buffer, end, icpus_pattern, sizeof(icpus_pattern));
+   if (found)
+   {
+		check = found - CPU_VERSION_OFFSET;
+
+	/* Printing the version found */
+		printf("     CPU Microcode 0206A7       - %02X\n", check[0]);
+   }
+
+   found = find_pattern(buffer, end, icpui_pattern, sizeof(icpui_pattern));
+   if (found)
+   {
+		check = found - CPU_VERSION_OFFSET;
+
+	/* Printing the version found */
+		printf("     CPU Microcode 0306A9       - %02X\n", check[0]);
+
+       	return ERR_SUCCESS;
+   }
+ 
+  return ERR_NOT_FOUND;
 }
