@@ -89,12 +89,13 @@ uint8_t print_version(const char* prefix, uint8_t* buffer, uint8_t* end,
 {
     uint8_t *found, *terminate;
     uint8_t isFound = 0;
+    uint8_t count = 0;
     
     if (!prefix || !buffer || !end || !pattern || !size || !max_length || !num_location)
         return ERR_INVALID_PARAMETER;
 
     found = find_pattern(buffer, end, pattern, size);
-    while (found != NULL)
+    while (found != NULL && count < num_location)
     {
         isFound = 1;
         terminate = find_pattern(found + offset, end, &end_pattern, 1);
@@ -102,10 +103,8 @@ uint8_t print_version(const char* prefix, uint8_t* buffer, uint8_t* end,
             terminate = found + offset + max_length;
         *terminate = 0x00;
         printf("%s%s\n", prefix, found + offset);
+        count++;
         found = find_pattern(found + 1, end, pattern, size);
-	if (num_location == 1)
-		return ERR_SUCCESS;
-
     }
     if (isFound)
         return ERR_SUCCESS;
