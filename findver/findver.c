@@ -84,12 +84,13 @@ uint8_t read_pattern(const char* string, uint8_t* pattern[], size_t* length)
 uint8_t print_version(const char* prefix, uint8_t* buffer, uint8_t* end,
                            const uint8_t* pattern, const uint32_t size, 
                            const long offset, const uint8_t end_pattern,
-                           const unsigned long max_length)
+                           const unsigned long max_length,
+                           const long num_location)
 {
     uint8_t *found, *terminate;
     uint8_t isFound = 0;
     
-    if (!prefix || !buffer || !end || !pattern || !size || !max_length)
+    if (!prefix || !buffer || !end || !pattern || !size || !max_length || !num_location)
         return ERR_INVALID_PARAMETER;
 
     found = find_pattern(buffer, end, pattern, size);
@@ -102,8 +103,10 @@ uint8_t print_version(const char* prefix, uint8_t* buffer, uint8_t* end,
         *terminate = 0x00;
         printf("%s%s\n", prefix, found + offset);
         found = find_pattern(found + 1, end, pattern, size);
-    }
+	if (num_location == 1)
+		return ERR_SUCCESS;
 
+    }
     if (isFound)
         return ERR_SUCCESS;
     else
@@ -125,11 +128,12 @@ int main(int argc, char* argv[])
     uint8_t* end_marker_pattern;
     long offset;
     long max_length;
+    long num_location;
     uint8_t result;
 
-    if (argc < 7)
+    if (argc < 8)
     {
-        printf("findver v0.3.1\n"
+        printf("findver v0.3.2\n"
             "Prints version string found in input file\n\n"
             "Usage: findver prefix pattern offset end_marker max_length FILE\n"
             "Options:\n"
@@ -138,6 +142,7 @@ int main(int argc, char* argv[])
             "offset      - Offset of version string, integer\n"
             "end_marker  - Pattern that marks end of version string, 2 hex digits\n"
             "max_length  - Maximum length of printed version string, integer\n"
+            "num_location- Number of location, integer\n"
             );
 
         return ERR_INVALID_PARAMETER;
@@ -146,7 +151,7 @@ int main(int argc, char* argv[])
 
 
     /* Opening file */
-    file = fopen(argv[6], "rb");
+    file = fopen(argv[7], "rb");
     if (!file)
     {
         printf("File can't be opened.\n");
@@ -190,5 +195,7 @@ int main(int argc, char* argv[])
     
     max_length = strtol(argv[5], NULL, 10);
 
-    return print_version(argv[1], buffer, end, pattern, pattern_length, offset, *end_marker_pattern, labs(max_length));
+    num_location = strtol(argv[6], NULL, 10);
+
+    return print_version(argv[1], buffer, end, pattern, pattern_length, offset, *end_marker_pattern, labs(max_length), num_location);
 }
