@@ -14,8 +14,22 @@
 #define ERR_OUT_OF_MEMORY 5
 #define ERR_UNKNOWN_VERSION 6
 
+/* String BIT */
+const uint8_t bit_pattern[] = {
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x45, 0x00, 0x00, 0x4C, 0x01
+};
+
 /* Intel GOP Driver */
 /* Search pattern: "Intel (R) GOP Driver" as Unicode string */
+const uint8_t snb_pattern[] = {
+	0x49, 0x00, 0x6E, 0x00, 0x74, 0x00, 0x65, 0x00, 0x6C, 0x00, 0x28, 0x00,
+	0x52, 0x00, 0x29, 0x00, 0x20, 0x00, 0x53, 0x00
+};
+const uint8_t ivb_pattern[] = {
+	0x49, 0x00, 0x6E, 0x00, 0x74, 0x00, 0x65, 0x00, 0x6C, 0x00, 0x28, 0x00,
+	0x52, 0x00, 0x29, 0x00, 0x20, 0x00, 0x49, 0x00
+};
+
 const uint8_t gop_pattern[] = {
 	0x49, 0x00, 0x6E, 0x00, 0x74, 0x00, 0x65, 0x00, 0x6C, 0x00, 0x28, 0x00,
 	0x52, 0x00, 0x29, 0x00, 0x20, 0x00, 0x47, 0x00, 0x4F, 0x00, 0x50, 0x00,
@@ -23,11 +37,19 @@ const uint8_t gop_pattern[] = {
 	0x72, 0x00
 };
 
+const uint8_t crv_pattern[] = {
+	0x43, 0x00, 0x6C, 0x00, 0x6F, 0x00, 0x76, 0x00, 0x65, 0x00, 0x72, 0x00,
+	0x20, 0x00, 0x56, 0x00, 0x69, 0x00, 0x65, 0x00, 0x77, 0x00
+};
+
 /* Offset and length of parts of version string */
 #define GOP_VERSION_2_OFFSET 0x98
 #define GOP_VERSION_3_OFFSET 0xA0
 #define GOP_VERSION_HSW_OFFSET 0xC0
 #define GOP_VERSION_BRW_OFFSET 0xF4
+#define GOP_VERSION_VLV_OFFSET 0x88
+#define GOP_VERSION_CHV_OFFSET 0x88
+#define GOP_VERSION_SKL_OFFSET 0xAC
 #define GOP_MAJOR_LENGTH 4
 #define GOP_MINOR_LENGTH 4
 #define GOP_REVISION_LENGTH 8
@@ -53,6 +75,12 @@ const uint8_t amdgop_pattern[] = {
 	0x50, 0x00
 };
 
+const uint8_t ms_cert_pattern[] = {
+	0x4D, 0x69, 0x63, 0x72, 0x6F, 0x73, 0x6F, 0x66, 0x74, 0x20, 0x52, 0x6F,
+	0x6F, 0x74, 0x20, 0x43, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61,
+	0x74, 0x65, 0x20, 0x41,	0x75, 0x74, 0x68, 0x6F, 0x72, 0x69, 0x74, 0x79
+};
+
 #define AMDGOP1_VERSION_OFFSET 0x2E
 #define AMDGOP2_VERSION_OFFSET 0x3E
 #define AMDGOP_VERSION_LENGTH 0x18
@@ -76,6 +104,12 @@ const uint8_t rste_pattern[] = {
 	0x49, 0x00, 0x6E, 0x00, 0x74, 0x00, 0x65, 0x00, 0x6C, 0x00, 0x20, 0x00,
 	0x52, 0x00, 0x53, 0x00, 0x54, 0x00, 0x65, 0x00, 0x20, 0x00
 };
+
+/* Intel RSTe sSATA Driver */
+const uint8_t ssata_pattern[] = {
+	0x00, 0x73, 0x00, 0x53, 0x00, 0x41, 0x00, 0x54, 0x00, 0x41, 0x00
+};
+
 /* Intel RSTe SCU Driver */
 const uint8_t scu_pattern[] = {
 	0x00, 0x53, 0x00, 0x43, 0x00, 0x55, 0x00
@@ -110,12 +144,47 @@ const uint8_t amdr_pattern[] = {
 /* Intel LAN Driver */
 /* Search pattern HEX String*/
 const uint8_t lani_pattern[] = {
-	0x20, 0x0C, 0x9A, 0x66
+	0x69, 0x08, 0x00, 0x20, 0x0C, 0x9A, 0x66
+};
+const uint8_t lanGB_pattern[] = {
+	0x49, 0x00, 0x6E, 0x00, 0x74, 0x00, 0x65, 0x00, 0x6C, 0x00, 0x28, 0x00,
+	0x52, 0x00, 0x29, 0x00, 0x20, 0x00, 0x47, 0x00, 0x69, 0x00, 0x67, 0x00,
+	0x61, 0x00, 0x62, 0x00, 0x69, 0x00, 0x74, 0x00, 0x20, 0x00, 0x25, 0x00,
+	0x31, 0x00, 0x64, 0x00
+};
+const uint8_t lan40_pattern[] = {
+	0x49, 0x00, 0x6E, 0x00, 0x74, 0x00, 0x65, 0x00, 0x6C, 0x00, 0x28, 0x00,
+	0x52, 0x00, 0x29, 0x00, 0x20, 0x00, 0x34, 0x00, 0x30, 0x00, 0x47, 0x00,
+	0x62, 0x00, 0x45, 0x00
+};
+const uint8_t lan10_pattern[] = {
+	0x49, 0x00, 0x6E, 0x00, 0x74, 0x00, 0x65, 0x00, 0x6C, 0x00, 0x28, 0x00,
+	0x52, 0x00, 0x29, 0x00, 0x20, 0x00, 0x31, 0x00, 0x30, 0x00, 0x47, 0x00,
+	0x62, 0x00, 0x45, 0x00, 0x20, 0x00, 0x44, 0x00, 0x72, 0x00, 0x69, 0x00,
+	0x76, 0x00, 0x65, 0x00, 0x72, 0x00
+};
+const uint8_t lans_pattern[] = {
+	0x49, 0x00, 0x6E, 0x00, 0x74, 0x00, 0x65, 0x00, 0x6C, 0x00, 0x28, 0x00,
+	0x52, 0x00, 0x29, 0x00, 0x20, 0x00, 0x50, 0x00, 0x52, 0x00, 0x4F, 0x00,
+	0x2F, 0x00, 0x31, 0x00, 0x30, 0x00, 0x30, 0x00, 0x30, 0x00, 0x20, 0x00,
+	0x47
 };
 
-#define LANI_VERSION_4_OFFSET 0x2F
-#define LANI_VERSION_5_OFFSET 0x1F
+const uint8_t fcoe_pattern[] = {
+	0x49, 0x00, 0x6E, 0x00, 0x74, 0x00, 0x65, 0x00, 0x6C, 0x00, 0x28, 0x00,
+	0x52, 0x00, 0x29, 0x00, 0x20, 0x00, 0x46, 0x00, 0x43, 0x00, 0x6F, 0x00,
+	0x45, 0x00, 0x20, 0x00, 0x42, 0x00, 0x6F, 0x00, 0x6F, 0x00, 0x74, 0x00,
+	0x20, 0x00, 0x4E, 0x00, 0x61, 0x00, 0x74, 0x00, 0x69, 0x00, 0x76, 0x00,
+	0x65, 0x00, 0x20, 0x00, 0x55, 0x00, 0x45, 0x00, 0x46, 0x00, 0x49, 0x00,
+	0x20, 0x00, 0x44, 0x00, 0x72, 0x00, 0x69, 0x00, 0x76, 0x00, 0x65, 0x00,
+	0x72, 0x00, 0x20, 0x00, 0x76, 0x00
+};
+
+#define LANI_VERSION_4_OFFSET 0x32
+#define LANI_VERSION_5_OFFSET 0x22
 #define LANI_VERSION_LENGTH 0x3
+#define FCOE_VERSION_OFFSET 0x4E
+#define FCOE_VERSION_LENGTH 0x12
 
 /* Marwell SATA Driver */
 /* Search pattern is "Marwell Connection" as Unicode string */
@@ -135,6 +204,14 @@ const uint8_t msatar_pattern[] = {
 
 /* Realtek LAN Driver */
 /* Search pattern HEX String*/
+const uint8_t lanrtk_pattern[] = {
+	0x52, 0x00, 0x65, 0x00, 0x61, 0x00, 0x6C, 0x00,
+	0x74, 0x00, 0x65, 0x00, 0x6B, 0x00, 0x20, 0x00,
+	0x55, 0x00, 0x45, 0x00, 0x46, 0x00, 0x49, 0x00,
+	0x20, 0x00, 0x55, 0x00, 0x4E, 0x00, 0x44, 0x00,
+	0x49, 0x00, 0x20, 0x00, 0x44, 0x00, 0x72, 0x00,
+	0x69, 0x00, 0x76, 0x00, 0x65, 0x00, 0x72, 0x00
+};
 const uint8_t lanr_new_pattern[] = {
 	0x01, 0xB2, 0x38, 0x78, 0x81, 0x43, 0x9B, 0x43
 };
@@ -155,10 +232,20 @@ const uint8_t lanb_pattern[] = {
 #define LANB_VERSION_14_OFFSET 0x11A
 #define LANB_VERSION_15_OFFSET 0x12A
 #define LANB_VERSION_16_OFFSET 0x16A
+#define LANB_VERSION_16_1_OFFSET 0x1CA
 #define LANB_VERSION_LENGTH 0x3
 
 /* Intel CPU Microcode */
 /* Search pattern HEX String*/
+const uint8_t icpuskls_pattern[] = {
+	0x01, 0x00, 0x00, 0x00, 0xE3, 0x06, 0x05, 0x00, 0x00, 0x00
+};
+const uint8_t icpuhe_pattern[] = {
+	0x01, 0x00, 0x00, 0x00, 0xF2, 0x06, 0x03, 0x00, 0x00, 0x00
+};
+const uint8_t icpub_pattern[] = {
+	0x01, 0x00, 0x00, 0x00, 0x71, 0x06, 0x04, 0x00, 0x00, 0x00
+};
 const uint8_t icpuh_pattern[] = {
 	0x01, 0x00, 0x00, 0x00, 0xC3, 0x06, 0x03, 0x00, 0x00, 0x00
 };
@@ -220,11 +307,11 @@ int main(int argc, char* argv[])
 	wchar_t* build;
     long filesize;
     long read;
-	char has_rev;
+	char *strb;
     
     if (argc < 2)
     {
-        printf("drvver v0.12\n");
+        printf("drvver v0.19.0\n");
         printf("Reads versions from input EFI-file\n");
         printf("Usage: drvver DRIVERFILE\n\n");
         printf("Support:\n"
@@ -236,7 +323,7 @@ int main(int argc, char* argv[])
     }
 
     /* Opening file */
-    file = fopen(argv[1], "r+b");
+    file = fopen(argv[1], "rb");
     if(!file)
     {
         printf("File can't be opened.\n");
@@ -267,69 +354,72 @@ int main(int argc, char* argv[])
     
     /* Searching for GOP pattern in file */
     end = buffer + filesize - 1;
+	if (find_pattern(buffer, end, bit_pattern, sizeof(bit_pattern)))
+		strb=" x86";
+	else
+		strb="";
+
     found = find_pattern(buffer, end, gop_pattern, sizeof(gop_pattern));
     if (found)
 	{
 		/* Checking for version 2 */
+		if (find_pattern(buffer, end, snb_pattern, sizeof(snb_pattern)))
+		{
 		check = found + GOP_VERSION_2_OFFSET;
-		if (check[0] == '2')
+		if ((check[0] == '2') || (check[0] == 'C'))
 		{
 			check += GOP_MAJOR_LENGTH;
-			minor = (wchar_t*) check;
 			check += GOP_MINOR_LENGTH;
 			if ((check[2] == 0x2E) || (check[2] == 0x00) || (check[10] != 0x00))
-			{
-			//	revision = (wchar_t*) check;
 				check += GOP_REVISION_LENGTH;
-			}
-			// else
-			//	revision = L"0";
+			if (check[0] == 'L') 
+				check -= 0x20;
 			build = (wchar_t*) check;
-
 			/* Printing the version found */
-			wprintf(L"     EFI GOP Driver SandyBridge - 2.%s.%s\n", minor, build);
+			wprintf(L"     EFI GOP Driver SandyBridge - 2.0.%s\n", build);
 
 			return ERR_SUCCESS; 
 		}
+		}
 	
 		/* Checking for version 3 */
+		if (find_pattern(buffer, end, ivb_pattern, sizeof(ivb_pattern)))
+		{
 		check = found + GOP_VERSION_3_OFFSET;
-		if (check[0] == '3')
+		if ((check[0] == '3') || (check[0] == 'L'))
 		{
 			check += GOP_MAJOR_LENGTH;
-			minor = (wchar_t*) check;
 			check += GOP_MINOR_LENGTH;
 			if ((check[2] == 0x2E) || (check[2] == 0x00) || (check[10] != 0x00))
-			{ 
-			//	revision = (wchar_t*) check;
 				check += GOP_REVISION_LENGTH;
-			}
-			// else
-			//	revision = L"0";
+			if (check[0] == 0x45)
+				check -= 0x30;
 			build = (wchar_t*) check;
-
 			/* Printing the version found */
-			wprintf(L"     EFI GOP Driver IvyBridge   - 3.%s.%s\n", minor,  build);
+			wprintf(L"     EFI GOP Driver IvyBridge   - 3.0.%s\n", build);
 
 			return ERR_SUCCESS; 
+		}
 		}
 
 		/* Checking for version 5 Haswell*/
 		check = found + GOP_VERSION_HSW_OFFSET;
-		if (check[0] == '5')
-		{
-			check += GOP_MAJOR_LENGTH;
-			minor = (wchar_t*) check;
-			check += GOP_MINOR_LENGTH;
+		if ((check[0] == '5') || (check[0] == 'H'))
+			{
+			check += GOP_MAJOR_LENGTH; 
+			check += GOP_MINOR_LENGTH; 
+			if (check[-2] == 'I')
+	 			check -= 0x48;
 			build = (wchar_t*) check;
 
 			/* Printing the version found */
-			wprintf(L"     EFI GOP Driver Haswell     - 5.%s.%s\n", minor, build);
+			wprintf(L"     EFI GOP Driver Haswell     - 5.0.%s\n", build);
 
-			return ERR_SUCCESS; 
+		return ERR_SUCCESS;
+
 		}
 
-		/* Checking for version 5 Broadwell*/
+		/* Checking for version 5.5 Broadwell*/
 		check = found + GOP_VERSION_BRW_OFFSET;
 		if (check[0] == '5')
 		{
@@ -338,6 +428,79 @@ int main(int argc, char* argv[])
 
 			/* Printing the version found */
 			wprintf(L"     EFI GOP Driver Broadwell   - 5.5.%s\n", build);
+
+			return ERR_SUCCESS; 
+		}
+
+		/* Checking for version 6 CloverView*/
+		if (find_pattern(buffer, end, crv_pattern, sizeof(crv_pattern)))
+		{
+		check = found;
+		if ((check[-28] == '6') && (check[-26] == '.') && (check[-24] == '0'))
+			check -= 0x28;
+		if ((check[-40] == '6') && (check[-38] == '.') && (check[-36] == '0'))
+			check += 0x80;
+
+		build = (wchar_t*) check;
+
+		/* Printing the version found */
+		wprintf(L"     EFI GOP Driver CloverView  - 6.0.%s", build);
+		printf("%s\n",strb);
+
+			return ERR_SUCCESS; 
+		}
+
+		/* Checking for version ValleyView*/
+		check = found + GOP_VERSION_VLV_OFFSET;
+		if (check[0] == '7')
+		{
+		if ((check[4] != '1') || (check[8] == '1'))
+		{
+			check += 0x4;
+		}
+			check += GOP_MAJOR_LENGTH;
+                 	build = (wchar_t*) check;
+
+			/* Printing the version found */
+			wprintf(L"     EFI GOP Driver ValleyView  - 7.x.%s", build);
+			printf("%s\n",strb);
+
+			return ERR_SUCCESS; 
+		}
+
+		/* Checking for version 8 CherryView*/
+		check = found + GOP_VERSION_CHV_OFFSET;
+		if (check[0] == '8')
+		{
+		if (check[4] != '1')
+		{
+			check += 0x4;
+		}
+			check += GOP_MAJOR_LENGTH;
+			build = (wchar_t*) check;
+
+			/* Printing the version found */
+			wprintf(L"     EFI GOP Driver CherryView  - 8.0.%s\n", build);
+
+			return ERR_SUCCESS; 
+		}
+
+		/* Checking for version 9 SkyLake*/
+		check = found + GOP_VERSION_SKL_OFFSET;
+		if (check[0] != '9')
+			check += 0x8;
+		if (check[0] != '9')
+			check -= 0xC;
+		if (check[0] == '9')
+		{
+		if (check[4] == '1')
+			check += GOP_MAJOR_LENGTH;
+		else
+			check += 0x8;
+			build = (wchar_t*) check;
+
+			/* Printing the version found */
+			wprintf(L"     EFI GOP Driver SkyLake     - 9.0.%s\n", build);
 
 			return ERR_SUCCESS; 
 		}
@@ -351,15 +514,21 @@ int main(int argc, char* argv[])
 	if (found)
 	{
 		check = found;
-       		if ((check[46] == '1') && (check[50] != '5'))
+       		if ((check[46] == '1') && (check[66] == '.'))
+		{
+			found += AMDGOP1_VERSION_OFFSET;
+			build = (wchar_t*) found;
+			build[AMDGOP_15_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
+		}
+		else if ((check[46] == '1') && (check[66] != '.'))
 		{
 			found += AMDGOP1_VERSION_OFFSET;
 			build = (wchar_t*) found;
 			build[AMDGOP_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
 		}
-		else if ((check[46] == '1') && (check[50] == '5'))
+                else if ((check[46] == 'v') && (check[82] == '.'))
 		{
-			found += AMDGOP1_VERSION_OFFSET;
+			found += AMDGOP2_VERSION_OFFSET;
 			build = (wchar_t*) found;
 			build[AMDGOP_15_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
 		}
@@ -367,11 +536,14 @@ int main(int argc, char* argv[])
 		{
 			found += AMDGOP2_VERSION_OFFSET;
 			build = (wchar_t*) found;
-			build[AMDGOP_15_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
+			build[AMDGOP_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
 		}
 
 		/* Printing the version found */
-		wprintf(L"     EFI GOP AMD                - %s\n", build);
+		if (find_pattern(buffer, end, ms_cert_pattern, sizeof(ms_cert_pattern)))
+			wprintf(L"     EFI GOP AMD                - %s_signed\n", build);
+		else
+			wprintf(L"     EFI GOP AMD                - %s\n", build);
 
 		return ERR_SUCCESS; 
 	}
@@ -407,7 +579,7 @@ int main(int argc, char* argv[])
 		build = (wchar_t*) found;
 		build[RST_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
 		/* Printing the version found */
-		wprintf(L"     EFI IRST SATA              - %s\n", build);
+		wprintf(L"     EFI IRST RAID for SATA     - %s\n", build);
 
 		return ERR_SUCCESS; 
 	}
@@ -433,12 +605,11 @@ int main(int argc, char* argv[])
 	        found += AMDU_VERSION_OFFSET;
 		build = (wchar_t*) found;
 		build[AMDU_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
-		
 		/* Printing the version found */
 		if (check[52] != ']')
-			wprintf(L"     EFI AMD Utility            - %s\n", build);
+		wprintf(L"     EFI AMD Utility            - %s\n", build);
 		else
-			printf ("     EFI AMD Utility            - %c.0.0.%c%c\n", check[44], check[48], check[50]);
+		printf ("     EFI AMD Utility            - %c.0.0.%c%c\n", check[44], check[48], check[50]);
 		return ERR_SUCCESS; 
 	}
 
@@ -451,12 +622,13 @@ int main(int argc, char* argv[])
 		build[RSTE_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
 
 		/* Printing the version found */
-		found = find_pattern(buffer, end, scu_pattern, sizeof(scu_pattern));
-		if (found)
-			wprintf(L"     EFI IRSTe SCU              - %s\n", build);
-		else
-			wprintf(L"     EFI IRSTe SATA             - %s\n", build);
-
+		if (find_pattern(buffer, end, scu_pattern, sizeof(scu_pattern)))
+			wprintf(L"     EFI IRSTe RAID for SCU     - %s\n", build);
+		else 
+			if (find_pattern(buffer, end, ssata_pattern, sizeof(ssata_pattern)))
+				wprintf(L"     EFI IRSTe RAID for sSATA   - %s\n", build);
+			else
+				wprintf(L"     EFI IRSTe RAID for SATA    - %s\n", build);
 		return ERR_SUCCESS; 
 	}
 
@@ -484,18 +656,51 @@ int main(int argc, char* argv[])
         if (found[LANI_VERSION_4_OFFSET] == 4)
             check = found + LANI_VERSION_4_OFFSET;
 		/* Checking for version 5 or 6 */
-        else if (found[LANI_VERSION_5_OFFSET] == 5 || found[LANI_VERSION_5_OFFSET] == 6)
+        else if (found[LANI_VERSION_5_OFFSET] == 3 || found[LANI_VERSION_5_OFFSET] == 4 || found[LANI_VERSION_5_OFFSET] == 5 || found[LANI_VERSION_5_OFFSET] == 6 || found[LANI_VERSION_5_OFFSET] != 0)
             check = found + LANI_VERSION_5_OFFSET;
+	else if (find_pattern(buffer, end, lanGB_pattern, sizeof(lanGB_pattern)))
+		{
+		if (found[LANI_VERSION_5_OFFSET] == 0)
+		check = found + LANI_VERSION_5_OFFSET;
+		}
+        else if (find_pattern(buffer, end, lan40_pattern, sizeof(lan40_pattern)))
+		{
+		if (found[LANI_VERSION_5_OFFSET] == 0)
+            	check = found - 30;
+		}
         else {
             printf("     Unknown Intel LAN version.\n");
             return ERR_NOT_FOUND;
         }
 
         /* Printing the version found */
-		printf("     EFI Intel UNDI             - %x.%x.%02x\n", check[0], check[-1], check[-2]);
+
+		if (find_pattern(buffer, end, lan40_pattern, sizeof(lan40_pattern)))
+			printf("     EFI Intel 40GbE UNDI       - %x.%x.%02x\n", check[0], check[-1], check[-2]);
+		else if (find_pattern(buffer, end, lan10_pattern, sizeof(lan10_pattern)))
+			printf("     EFI Intel 10GbE UNDI       - %x.%x.%02x\n", check[0], check[-1], check[-2]);
+		else if (find_pattern(buffer, end, lans_pattern, sizeof(lans_pattern)))
+			printf("     EFI Intel PRO/Server UNDI  - %x.%x.%02x\n", check[0], check[-1], check[-2]);
+		else if (find_pattern(buffer, end, lanGB_pattern, sizeof(lanGB_pattern)))
+			printf("     EFI Intel Gigabit UNDI     - %x.%x.%02x\n", check[0], check[-1], check[-2]);
+		else
+			printf("     EFI Intel PRO/1000 UNDI    - %x.%x.%02x\n", check[0], check[-1], check[-2]);
 
 		return ERR_SUCCESS; 
     }
+
+	/* Searching for FCoE pattern in file */
+	found = find_pattern(buffer, end, fcoe_pattern, sizeof(fcoe_pattern));
+	if (found)
+	{
+		found += FCOE_VERSION_OFFSET;
+		build = (wchar_t*) found;
+		build[FCOE_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
+		/* Printing the version found */
+		wprintf(L"     EFI Intel FCoE Boot        - %s\n", build);
+
+		return ERR_SUCCESS; 
+	}
 
 	/* Searching for LANB pattern in file */
    found = find_pattern(buffer, end, lanb_pattern, sizeof(lanb_pattern));
@@ -510,6 +715,8 @@ int main(int argc, char* argv[])
 		/* Checking for version 16 */
         else if (found[LANB_VERSION_16_OFFSET] == 16)
             check = found + LANB_VERSION_16_OFFSET;
+        else if (found[LANB_VERSION_16_1_OFFSET] == 16)
+            check = found + LANB_VERSION_16_1_OFFSET;
         else {
             printf("     Unknown Broadcom LAN version.\n");
             return ERR_NOT_FOUND;
@@ -521,77 +728,114 @@ int main(int argc, char* argv[])
 		return ERR_SUCCESS; 
    }
 
-	/* Searching for LANR pattern in new file */
-   found = find_pattern(buffer, end, lanr_new_pattern, sizeof(lanr_new_pattern));
+	/* Searching for LAN Realtek pattern in new file */
+
+   found = find_pattern(buffer, end, lanrtk_pattern, sizeof(lanrtk_pattern));
    if (found)
    {
-		if ((found[LANR_VERSION_NEW_OFFSET] == 4) || (found[LANR_VERSION_NEW_OFFSET] == 0))
-		check = found - LANR_VERSION_NEW_OFFSET;
- 	else {
+	if (find_pattern(buffer, end, lanr_new_pattern, sizeof(lanr_new_pattern)))
+	{
+	check = find_pattern(buffer, end, lanr_new_pattern, sizeof(lanr_new_pattern));
+		if (check[-22] == 0x20)
+		check = check - 22;
+		else if (check[-23] == 0x20)
+		check = check - 23;
+		else if (check[-11] == 0x20)
+		check = check - 11;
+
+	 	else {
 		printf("     Unknown Realtek LAN version.\n");
 		return ERR_NOT_FOUND;}
-
-	/* Printing the version found */
-	if (check[+1] != 0) {
-		printf("     EFI Realtek UNDI           - %x.%03x %X\n", check[+1] >> 4, check[0], check[-1]);
-        	return ERR_SUCCESS;}
-	else {
-		printf("     EFI Realtek UNDI           - %x.%03X\n", check[0] >> 4, check[-1]);
-        	return ERR_SUCCESS;}
-   }
-
-	/* Searching for LANR pattern in old file */
-   found = find_pattern(buffer, end, lanr_old_pattern, sizeof(lanr_old_pattern));
-   if (found)
-   {
-		if (found[LANR_VERSION_OLD_OFFSET] == 0)
-		check = found - LANR_VERSION_OLD_OFFSET;
- 	else {
+	}
+	else if (find_pattern(buffer, end, lanr_old_pattern, sizeof(lanr_old_pattern)))
+	{
+	check = find_pattern(buffer, end, lanr_old_pattern, sizeof(lanr_old_pattern));
+		if ((check[-30] == 0x20) || (check[-30] != 0x2F)  || (check[-29] != 0x00) || (check[-31] == 0x00))
+		check = check - 30;
+		else if (check[-18] == 0x20)
+		check = check - 18;
+	 	else {
 		printf("     Unknown Realtek LAN version.\n");
 		return ERR_NOT_FOUND;}
+	}
 
 	/* Printing the version found */
-	if (check[+1] != 0) {
-		printf("     EFI Realtek UNDI           - %x.%03x %X\n", check[+1] >> 4, check[0], check[-1]);
+	if (check[-2] != 0) {
+		printf("     EFI Realtek UNDI           - %x.%03x %X%s\n", check[0] >> 4, check[-1], check[-2], strb);
         	return ERR_SUCCESS;}
 	else {
-		printf("     EFI Realtek UNDI           - %x.%03X\n", check[0] >> 4, check[-1]);
+		printf("     EFI Realtek UNDI           - %x.%03X%s\n", check[0] >> 4, check[-1], strb);
         	return ERR_SUCCESS;}
+
+
+
    }
 
 	/* Searching for CPU pattern LGA1150 */
 //   end = buffer + filesize - 1;
+   found = find_pattern(buffer, end, icpub_pattern, sizeof(icpub_pattern));
+   if (found)
+   {
+		check = found - CPU_VERSION_OFFSET;
+
+	/* Printing the version found */
+		printf("     CPU Microcode 040671 BDW   - %02X\n", check[0]);
+   }
    found = find_pattern(buffer, end, icpuh_pattern, sizeof(icpuh_pattern));
    if (found)
    {
 		check = found - CPU_VERSION_OFFSET;
 
 	/* Printing the version found */
-		printf("     CPU Microcode 0306C3       - %02X\n", check[0]);
+		printf("     CPU Microcode 0306C3 HSW   - %02X\n", check[0]);
 
         	return ERR_SUCCESS;
    }
 
 	/* Searching for CPU pattern LGA1155 */
-   found = find_pattern(buffer, end, icpus_pattern, sizeof(icpus_pattern));
-   if (found)
-   {
-		check = found - CPU_VERSION_OFFSET;
-
-	/* Printing the version found */
-		printf("     CPU Microcode 0206A7       - %02X\n", check[0]);
-   }
-
    found = find_pattern(buffer, end, icpui_pattern, sizeof(icpui_pattern));
    if (found)
    {
 		check = found - CPU_VERSION_OFFSET;
 
 	/* Printing the version found */
-		printf("     CPU Microcode 0306A9       - %02X\n", check[0]);
+		printf("     CPU Microcode 0206A9 IVB   - %02X\n", check[0]);
+   }
+
+   found = find_pattern(buffer, end, icpus_pattern, sizeof(icpus_pattern));
+   if (found)
+   {
+		check = found - CPU_VERSION_OFFSET;
+
+	/* Printing the version found */
+		printf("     CPU Microcode 0306A7 SNB   - %02X\n", check[0]);
 
        	return ERR_SUCCESS;
    }
  
+	/* Searching for CPU pattern LGA2011v3 */
+   found = find_pattern(buffer, end, icpuhe_pattern, sizeof(icpuhe_pattern));
+   if (found)
+   {
+		check = found - CPU_VERSION_OFFSET;
+
+	/* Printing the version found */
+		printf("     CPU Microcode 0306F2 HSW-E - %02X\n", check[0]);
+
+       	return ERR_SUCCESS;
+   }
+
+	/* Searching for CPU pattern LGA1151 */
+   found = find_pattern(buffer, end, icpuskls_pattern, sizeof(icpuskls_pattern));
+   if (found)
+   {
+		check = found - CPU_VERSION_OFFSET;
+
+	/* Printing the version found */
+		printf("     CPU Microcode 0506E3 SKl-S - %02X\n", check[0]);
+
+       	return ERR_SUCCESS;
+   }
+
   return ERR_NOT_FOUND;
 }
