@@ -219,10 +219,6 @@ const uint8_t lanr_old_pattern[] = {
 	0x04, 0x34, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00, 0x00
 };
 
-#define LANR_VERSION_NEW_OFFSET 0x17
-#define LANR_VERSION_OLD_OFFSET 0x1E
-#define LANR_VERSION_LENGTH 0x3
-
 /* Broadcom LAN Driver */
 /* Search pattern HEX String*/
 const uint8_t lanb_pattern[] = {
@@ -303,7 +299,6 @@ int main(int argc, char* argv[])
     uint8_t* end;
     uint8_t* found;
 	uint8_t* check;
-	wchar_t* minor;
 	wchar_t* build;
     long filesize;
     long read;
@@ -311,7 +306,7 @@ int main(int argc, char* argv[])
     
     if (argc < 2)
     {
-        printf("drvver v0.19.0\n");
+        printf("drvver v0.19.1\n");
         printf("Reads versions from input EFI-file\n");
         printf("Usage: drvver DRIVERFILE\n\n");
         printf("Support:\n"
@@ -404,12 +399,14 @@ int main(int argc, char* argv[])
 
 		/* Checking for version 5 Haswell*/
 		check = found + GOP_VERSION_HSW_OFFSET;
-		if ((check[0] == '5') || (check[0] == 'H'))
+		if ((check[0] == '5') || (check[0] == 'H') || (check[0] == 0x06))
 			{
 			check += GOP_MAJOR_LENGTH; 
 			check += GOP_MINOR_LENGTH; 
 			if (check[-2] == 'I')
 	 			check -= 0x48;
+			else if ((check[0] == 0x1A) && (check[1] == 0x0A) && (check[40] == '5'))
+	 			check = check + 56;
 			build = (wchar_t*) check;
 
 			/* Printing the version found */
@@ -444,8 +441,7 @@ int main(int argc, char* argv[])
 		build = (wchar_t*) check;
 
 		/* Printing the version found */
-		wprintf(L"     EFI GOP Driver CloverView  - 6.0.%s", build);
-		printf("%s\n",strb);
+		wprintf(L"     EFI GOP Driver CloverView  - 6.0.%s%S\n", build, strb);
 
 			return ERR_SUCCESS; 
 		}
@@ -462,8 +458,7 @@ int main(int argc, char* argv[])
                  	build = (wchar_t*) check;
 
 			/* Printing the version found */
-			wprintf(L"     EFI GOP Driver ValleyView  - 7.x.%s", build);
-			printf("%s\n",strb);
+			wprintf(L"     EFI GOP Driver ValleyView  - 7.x.%s%S\n", build, strb);
 
 			return ERR_SUCCESS; 
 		}
@@ -721,15 +716,12 @@ int main(int argc, char* argv[])
             printf("     Unknown Broadcom LAN version.\n");
             return ERR_NOT_FOUND;
         }
-
         /* Printing the version found */
-		printf("     EFI Broadcom UNDI          - %d.%d.%d\n", check[0], check[-1], check[-2]);
-
-		return ERR_SUCCESS; 
+	printf("     EFI Broadcom UNDI          - %d.%d.%d\n", check[0], check[-1], check[-2]);
+	return ERR_SUCCESS; 
    }
 
 	/* Searching for LAN Realtek pattern in new file */
-
    found = find_pattern(buffer, end, lanrtk_pattern, sizeof(lanrtk_pattern));
    if (found)
    {
@@ -738,15 +730,15 @@ int main(int argc, char* argv[])
 	check = find_pattern(buffer, end, lanr_new_pattern, sizeof(lanr_new_pattern));
 		if (check[-22] == 0x20)
 		check = check - 22;
-		else if (check[-23] == 0x20)
+		else if ((check[-23] == 0x20) || (check[-23] == 0x30))
 		check = check - 23;
 		else if (check[-11] == 0x20)
 		check = check - 11;
-
 	 	else {
 		printf("     Unknown Realtek LAN version.\n");
 		return ERR_NOT_FOUND;}
 	}
+
 	else if (find_pattern(buffer, end, lanr_old_pattern, sizeof(lanr_old_pattern)))
 	{
 	check = find_pattern(buffer, end, lanr_old_pattern, sizeof(lanr_old_pattern));
@@ -772,44 +764,32 @@ int main(int argc, char* argv[])
    }
 
 	/* Searching for CPU pattern LGA1150 */
-//   end = buffer + filesize - 1;
    found = find_pattern(buffer, end, icpub_pattern, sizeof(icpub_pattern));
    if (found)
    {
-		check = found - CPU_VERSION_OFFSET;
-
-	/* Printing the version found */
-		printf("     CPU Microcode 040671 BDW   - %02X\n", check[0]);
+	check = found - CPU_VERSION_OFFSET;
+	printf("     CPU Microcode 040671 BDW   - %02X\n", check[0]);
    }
    found = find_pattern(buffer, end, icpuh_pattern, sizeof(icpuh_pattern));
    if (found)
    {
-		check = found - CPU_VERSION_OFFSET;
-
-	/* Printing the version found */
-		printf("     CPU Microcode 0306C3 HSW   - %02X\n", check[0]);
-
-        	return ERR_SUCCESS;
+	check = found - CPU_VERSION_OFFSET;
+	printf("     CPU Microcode 0306C3 HSW   - %02X\n", check[0]);
+       	return ERR_SUCCESS;
    }
 
 	/* Searching for CPU pattern LGA1155 */
    found = find_pattern(buffer, end, icpui_pattern, sizeof(icpui_pattern));
    if (found)
    {
-		check = found - CPU_VERSION_OFFSET;
-
-	/* Printing the version found */
-		printf("     CPU Microcode 0206A9 IVB   - %02X\n", check[0]);
+	check = found - CPU_VERSION_OFFSET;
+	printf("     CPU Microcode 0206A9 IVB   - %02X\n", check[0]);
    }
-
    found = find_pattern(buffer, end, icpus_pattern, sizeof(icpus_pattern));
    if (found)
    {
-		check = found - CPU_VERSION_OFFSET;
-
-	/* Printing the version found */
-		printf("     CPU Microcode 0306A7 SNB   - %02X\n", check[0]);
-
+	check = found - CPU_VERSION_OFFSET;
+	printf("     CPU Microcode 0306A7 SNB   - %02X\n", check[0]);
        	return ERR_SUCCESS;
    }
  
@@ -817,11 +797,8 @@ int main(int argc, char* argv[])
    found = find_pattern(buffer, end, icpuhe_pattern, sizeof(icpuhe_pattern));
    if (found)
    {
-		check = found - CPU_VERSION_OFFSET;
-
-	/* Printing the version found */
-		printf("     CPU Microcode 0306F2 HSW-E - %02X\n", check[0]);
-
+	check = found - CPU_VERSION_OFFSET;
+	printf("     CPU Microcode 0306F2 HSW-E - %02X\n", check[0]);
        	return ERR_SUCCESS;
    }
 
@@ -829,12 +806,10 @@ int main(int argc, char* argv[])
    found = find_pattern(buffer, end, icpuskls_pattern, sizeof(icpuskls_pattern));
    if (found)
    {
-		check = found - CPU_VERSION_OFFSET;
-
-	/* Printing the version found */
-		printf("     CPU Microcode 0506E3 SKl-S - %02X\n", check[0]);
-
+	check = found - CPU_VERSION_OFFSET;
+	printf("     CPU Microcode 0506E3 SKL-S - %02X\n", check[0]);
        	return ERR_SUCCESS;
    }
+
   return ERR_NOT_FOUND;
 }
