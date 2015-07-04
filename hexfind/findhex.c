@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
     
     if (argc < 3)
     {
-        printf("hexfind v0.1\n\nUsage: hexfind PATTERN FILENAME\n");
+        printf("hexfind v0.1.2\n\nUsage: hexfind PATTERN FILENAME\n");
         return ERR_INVALID_PARAMETER;
     }
 
@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
     }
 
     /* Opening file */
-    file = fopen(argv[2], "r+b");
+    file = fopen(argv[2], "rb");
     if(!file)
     {
         printf("File can't be opened.\n");
@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
     
     /* Searching for pattern in file and counting matches */
     count = 0;
-    end = buffer + filesize - 1;
+    end = buffer + filesize;
     found = find_pattern(buffer, end, pattern, length);
     while (found)
     {
