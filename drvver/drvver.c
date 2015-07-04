@@ -303,10 +303,11 @@ int main(int argc, char* argv[])
     long filesize;
     long read;
 	char *strb;
+	char mnr;
     
     if (argc < 2)
     {
-        printf("drvver v0.19.1\n");
+        printf("drvver v0.19.2\n");
         printf("Reads versions from input EFI-file\n");
         printf("Usage: drvver DRIVERFILE\n\n");
         printf("Support:\n"
@@ -450,16 +451,30 @@ int main(int argc, char* argv[])
 		check = found + GOP_VERSION_VLV_OFFSET;
 		if (check[0] == '7')
 		{
-		if ((check[4] != '1') || (check[8] == '1'))
-		{
-			check += 0x4;
-		}
-			check += GOP_MAJOR_LENGTH;
+		if ((check[4] == '0') && (check[8] == '1'))
+		{	mnr = '0';
+			check = check + 8;}
+		else if ((check[4] == '1') && (check[8] == '1'))
+		{	mnr = '1';
+			check = check + 8;}
+		else if ((check[4] == 0x00) && (check[8] == '1') && (check[20] == 0xFF))
+		{	mnr = '1';
+			check = check + 8;}
+		else if ((check[4] == '1') && (check[16] == 0xFF))
+		{	mnr = '1';
+			check = check + 4;}
+		else if ((check[4] == '2') && (check[8] == '1'))
+		{   	mnr = '2';
+			check = check + 8;}
+		else if ((check[4] == 0x00) && (check[8] == '1') && (check[20] == 0x00))
+		{	mnr = '2';
+			check = check + 8;}
+		else if ((check[4] == '1') && (check[16] == 0x00))
+		{	mnr = '2';
+			check = check + 4;}
+
                  	build = (wchar_t*) check;
-
-			/* Printing the version found */
-			wprintf(L"     EFI GOP Driver ValleyView  - 7.x.%s%S\n", build, strb);
-
+			wprintf(L"     EFI GOP Driver ValleyView  - 7.%c.%s%S\n", mnr, build, strb);
 			return ERR_SUCCESS; 
 		}
 
@@ -501,6 +516,7 @@ int main(int argc, char* argv[])
 		}
 
 		/* Unknown version */
+		printf ("     Unknown version GOP Driver\n");
 		return ERR_UNKNOWN_VERSION;
 	}
 
