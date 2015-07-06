@@ -140,6 +140,9 @@ int main(int argc, char* argv[])
             "pattern     - Pattern to find, hex digits\n"
             "offset      - Offset of version string, integer\n"
             "end_marker  - Pattern that marks end of version string, 2 hex digits\n"
+
+/*            "count_skip_end_marker  - Count skip end marker"; */
+
             "max_length  - Maximum length of printed version string, integer\n"
             "num_location- Number of location, integer\n"
             );
