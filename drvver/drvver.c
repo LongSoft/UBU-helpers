@@ -15,7 +15,7 @@
 #define ERR_UNKNOWN_VERSION 6
 
 /* String BIT */
-const uint8_t bit_pattern[] = {
+const uint8_t bitx86_pattern[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x45, 0x00, 0x00, 0x4C, 0x01
 };
 
@@ -117,6 +117,18 @@ const uint8_t scu_pattern[] = {
 
 #define RSTE_VERSION_OFFSET 0x16
 #define RSTE_VERSION_LENGTH 0x16
+
+
+/* Intel RST NVMe Driver */
+const uint8_t nvme_pattern[] = {
+	0x4E, 0x00, 0x56, 0x00, 0x4D, 0x00, 0x65, 0x00, 0x20, 0x00, 0x55, 0x00,
+	0x45, 0x00, 0x46, 0x00, 0x49, 0x00, 0x20, 0x00, 0x44, 0x00, 0x72, 0x00,
+	0x69, 0x00, 0x76, 0x00, 0x65, 0x00, 0x72, 0x00
+};
+
+#define NVME_VERSION_OFFSET 0x16
+#define NVME_VERSION_LENGTH 0x14
+
 
 /* AMD RAID Driver */
 /* Search pattern: "AMD Raid Channel" as Unicode string */
@@ -251,6 +263,12 @@ const uint8_t icpui_pattern[] = {
 const uint8_t icpus_pattern[] = {
 	0x01, 0x00, 0x00, 0x00, 0xA7, 0x06, 0x02, 0x00, 0x00, 0x00
 };
+const uint8_t icpusnbe_pattern[] = {
+	0x01, 0x00, 0x00, 0x00, 0xD7, 0x06, 0x02, 0x00, 0x00, 0x00
+};
+const uint8_t icpuivbe_pattern[] = {
+	0x01, 0x00, 0x00, 0x00, 0xE7, 0x06, 0x03, 0x00, 0x00, 0x00
+};
 
 
 #define CPU_VERSION_OFFSET 0x4C
@@ -307,7 +325,7 @@ int main(int argc, char* argv[])
     
     if (argc < 2)
     {
-        printf("drvver v0.19.2\n");
+        printf("drvver v0.19.4\n");
         printf("Reads versions from input EFI-file\n");
         printf("Usage: drvver DRIVERFILE\n\n");
         printf("Support:\n"
@@ -350,7 +368,7 @@ int main(int argc, char* argv[])
     
     /* Searching for GOP pattern in file */
     end = buffer + filesize - 1;
-	if (find_pattern(buffer, end, bit_pattern, sizeof(bit_pattern)))
+	if (find_pattern(buffer, end, bitx86_pattern, sizeof(bitx86_pattern)))
 		strb=" x86";
 	else
 		strb="";
@@ -454,19 +472,15 @@ int main(int argc, char* argv[])
 		if ((check[4] == '0') && (check[8] == '1'))
 		{	mnr = '0';
 			check = check + 8;}
-		else if ((check[4] == '1') && (check[8] == '1'))
-		{	mnr = '1';
-			check = check + 8;}
-		else if ((check[4] == 0x00) && (check[8] == '1') && (check[20] == 0xFF))
+		else if (((check[4] == '1') && (check[8] == '1')) ||
+			((check[4] == 0x00) && (check[8] == '1') && (check[20] == 0xFF)))
 		{	mnr = '1';
 			check = check + 8;}
 		else if ((check[4] == '1') && (check[16] == 0xFF))
 		{	mnr = '1';
 			check = check + 4;}
-		else if ((check[4] == '2') && (check[8] == '1'))
-		{   	mnr = '2';
-			check = check + 8;}
-		else if ((check[4] == 0x00) && (check[8] == '1') && (check[20] == 0x00))
+		else if (((check[4] == '2') && (check[8] == '1')) ||
+			((check[4] == 0x00) && (check[8] == '1') && (check[20] == 0x00)))
 		{	mnr = '2';
 			check = check + 8;}
 		else if ((check[4] == '1') && (check[16] == 0x00))
@@ -591,6 +605,19 @@ int main(int argc, char* argv[])
 		build[RST_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
 		/* Printing the version found */
 		wprintf(L"     EFI IRST RAID for SATA     - %s\n", build);
+
+		return ERR_SUCCESS; 
+	}
+
+	/* Searching for NVMe pattern in file */
+	found = find_pattern(buffer, end, nvme_pattern, sizeof(nvme_pattern));
+	if (found)
+	{
+		found -= NVME_VERSION_OFFSET;
+		build = (wchar_t*) found;
+		build[NVME_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
+		/* Printing the version found */
+		wprintf(L"     EFI IRST NVMe Driver       - %s\n", build);
 
 		return ERR_SUCCESS; 
 	}
@@ -799,16 +826,31 @@ int main(int argc, char* argv[])
    if (found)
    {
 	check = found - CPU_VERSION_OFFSET;
-	printf("     CPU Microcode 0206A9 IVB   - %02X\n", check[0]);
+	printf("     CPU Microcode 0306A9 IVB   - %02X\n", check[0]);
    }
    found = find_pattern(buffer, end, icpus_pattern, sizeof(icpus_pattern));
    if (found)
    {
 	check = found - CPU_VERSION_OFFSET;
-	printf("     CPU Microcode 0306A7 SNB   - %02X\n", check[0]);
+	printf("     CPU Microcode 0206A7 SNB   - %02X\n", check[0]);
        	return ERR_SUCCESS;
    }
  
+	/* Searching for CPU pattern LGA2011 */
+   found = find_pattern(buffer, end, icpuivbe_pattern, sizeof(icpuivbe_pattern));
+   if (found)
+   {
+	check = found - CPU_VERSION_OFFSET;
+	printf("     CPU Microcode 0306E7 IVB-E - %X%02X\n", check[1], check[0]);
+   }
+   found = find_pattern(buffer, end, icpusnbe_pattern, sizeof(icpusnbe_pattern));
+   if (found)
+   {
+	check = found - CPU_VERSION_OFFSET;
+	printf("     CPU Microcode 0206D7 SNB-E - %X%02X\n", check[1], check[0]);
+       	return ERR_SUCCESS;
+   }
+
 	/* Searching for CPU pattern LGA2011v3 */
    found = find_pattern(buffer, end, icpuhe_pattern, sizeof(icpuhe_pattern));
    if (found)
