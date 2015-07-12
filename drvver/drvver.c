@@ -263,13 +263,18 @@ const uint8_t icpui_pattern[] = {
 const uint8_t icpus_pattern[] = {
 	0x01, 0x00, 0x00, 0x00, 0xA7, 0x06, 0x02, 0x00, 0x00, 0x00
 };
+const uint8_t icpusnbe6_pattern[] = {
+	0x01, 0x00, 0x00, 0x00, 0xD6, 0x06, 0x02, 0x00, 0x00, 0x00
+};
 const uint8_t icpusnbe_pattern[] = {
 	0x01, 0x00, 0x00, 0x00, 0xD7, 0x06, 0x02, 0x00, 0x00, 0x00
 };
 const uint8_t icpuivbe_pattern[] = {
+	0x01, 0x00, 0x00, 0x00, 0xE4, 0x06, 0x03, 0x00, 0x00, 0x00
+};
+const uint8_t icpuivbe7_pattern[] = {
 	0x01, 0x00, 0x00, 0x00, 0xE7, 0x06, 0x03, 0x00, 0x00, 0x00
 };
-
 
 #define CPU_VERSION_OFFSET 0x4C
 #define CPU_VERSION_LENGTH 0x1
@@ -325,7 +330,7 @@ int main(int argc, char* argv[])
     
     if (argc < 2)
     {
-        printf("drvver v0.19.4\n");
+        printf("drvver v0.19.5\n");
         printf("Reads versions from input EFI-file\n");
         printf("Usage: drvver DRIVERFILE\n\n");
         printf("Support:\n"
@@ -837,17 +842,29 @@ int main(int argc, char* argv[])
    }
  
 	/* Searching for CPU pattern LGA2011 */
-   found = find_pattern(buffer, end, icpuivbe_pattern, sizeof(icpuivbe_pattern));
+   found = find_pattern(buffer, end, icpuivbe7_pattern, sizeof(icpuivbe7_pattern));
    if (found)
    {
 	check = found - CPU_VERSION_OFFSET;
 	printf("     CPU Microcode 0306E7 IVB-E - %X%02X\n", check[1], check[0]);
+   }
+   found = find_pattern(buffer, end, icpuivbe_pattern, sizeof(icpuivbe_pattern));
+   if (found)
+   {
+	check = found - CPU_VERSION_OFFSET;
+	printf("     CPU Microcode 0306E4 IVB-E - %X%02X\n", check[1], check[0]);
    }
    found = find_pattern(buffer, end, icpusnbe_pattern, sizeof(icpusnbe_pattern));
    if (found)
    {
 	check = found - CPU_VERSION_OFFSET;
 	printf("     CPU Microcode 0206D7 SNB-E - %X%02X\n", check[1], check[0]);
+   }
+   found = find_pattern(buffer, end, icpusnbe6_pattern, sizeof(icpusnbe6_pattern));
+   if (found)
+   {
+	check = found - CPU_VERSION_OFFSET;
+	printf("     CPU Microcode 0206D6 SNB-E - %X%02X\n", check[1], check[0]);
        	return ERR_SUCCESS;
    }
 
