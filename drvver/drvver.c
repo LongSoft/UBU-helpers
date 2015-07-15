@@ -192,6 +192,10 @@ const uint8_t fcoe_pattern[] = {
 	0x72, 0x00, 0x20, 0x00, 0x76, 0x00
 };
 
+const uint8_t fcoeh_pattern[] = {
+	0xAC, 0xB6, 0xB4, 0xB6, 0x76, 0xB1, 0x5E, 0x80
+};
+
 #define LANI_VERSION_4_OFFSET 0x32
 #define LANI_VERSION_5_OFFSET 0x22
 #define LANI_VERSION_LENGTH 0x3
@@ -330,7 +334,7 @@ int main(int argc, char* argv[])
     
     if (argc < 2)
     {
-        printf("drvver v0.19.5\n");
+        printf("drvver v0.19.6\n");
         printf("Reads versions from input EFI-file\n");
         printf("Usage: drvver DRIVERFILE\n\n");
         printf("Support:\n"
@@ -516,16 +520,15 @@ int main(int argc, char* argv[])
 
 		/* Checking for version 9 SkyLake*/
 		check = found + GOP_VERSION_SKL_OFFSET;
-		if (check[0] != '9')
-			check += 0x8;
-		if (check[0] != '9')
-			check -= 0xC;
-		if (check[0] == '9')
 		{
-		if (check[4] == '1')
-			check += GOP_MAJOR_LENGTH;
-		else
-			check += 0x8;
+		if (((check[0] == '9') && (check[4] == '1')) ||
+		   ((check[-4] == '9') && (check[4] == '1')))
+			check += 4;
+		else if ((check[8] == '9') && (check[12] == '1'))
+			check += 12;
+		else if ((check[52] == '9') && (check[56] == '0') && (check[60] == '1'))
+			check += 60;
+
 			build = (wchar_t*) check;
 
 			/* Printing the version found */
@@ -737,12 +740,25 @@ int main(int argc, char* argv[])
 	if (found)
 	{
 		found += FCOE_VERSION_OFFSET;
-		build = (wchar_t*) found;
-		build[FCOE_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
+		check = (found);
+		if (check[0] == '1')
+		{
+			build = (wchar_t*) found;
+			build[FCOE_VERSION_LENGTH/sizeof(wchar_t)] = 0x00;
 		/* Printing the version found */
-		wprintf(L"     EFI Intel FCoE Boot        - %s\n", build);
-
-		return ERR_SUCCESS; 
+			wprintf(L"     EFI Intel FCoE Boot        - %s\n", build);
+			return ERR_SUCCESS; 
+		}
+		else if (find_pattern(buffer, end, fcoeh_pattern, sizeof(fcoeh_pattern)))
+		{
+			check = (find_pattern(buffer, end, fcoeh_pattern, sizeof(fcoeh_pattern))) + 35;
+			if (check[0] == 1)
+			{
+				printf("     EFI Intel FCoE Boot        - %d.%d.%02d\n", check[0], check[-1],check[-2]);
+				return ERR_SUCCESS;}
+		}
+		printf("     Unknown Intel FCoE version.\n");
+		return ERR_NOT_FOUND;
 	}
 
 	/* Searching for LANB pattern in file */
