@@ -106,8 +106,11 @@ const uint8_t rste_pattern[] = {
 };
 
 /* Intel RSTe sSATA Driver */
-const uint8_t ssata_pattern[] = {
-	0x00, 0x73, 0x00, 0x53, 0x00, 0x41, 0x00, 0x54, 0x00, 0x41, 0x00
+const uint8_t 	ssata_pattern[] = {
+	0x00, 0x49, 0x00, 0x6E, 0x00, 0x74, 0x00, 0x65, 0x00, 0x6C, 0x00, 0x28,
+	0x00, 0x52, 0x00, 0x29, 0x00, 0x20, 0x00, 0x52, 0x00, 0x53, 0x00, 0x54,
+	0x00, 0x65, 0x00, 0x20,	0x00, 0x73, 0x00, 0x53, 0x00, 0x41, 0x00, 0x54,
+	0x00, 0x41, 0x00
 };
 
 /* Intel RSTe SCU Driver */
@@ -205,14 +208,14 @@ const uint8_t fcoeh_pattern[] = {
 /* Marwell SATA Driver */
 /* Search pattern is "Marwell Connection" as Unicode string */
 const uint8_t msata_pattern[] = {
-    0x4D, 0x00, 0x61, 0x00, 0x72, 0x00, 0x76, 0x00, 0x65, 0x00, 0x6C, 0x00, 
-    0x6C, 0x00, 0x20, 0x00, 0x43, 0x00, 0x68, 0x00, 0x61, 0x00, 0x6E, 0x00, 
-    0x6E, 0x00, 0x65, 0x00, 0x6C, 0x00
+	0x4D, 0x00, 0x61, 0x00, 0x72, 0x00, 0x76, 0x00, 0x65, 0x00, 0x6C, 0x00, 
+	0x6C, 0x00, 0x20, 0x00, 0x43, 0x00, 0x68, 0x00, 0x61, 0x00, 0x6E, 0x00, 
+	0x6E, 0x00, 0x65, 0x00, 0x6C, 0x00
 };
 /* Marwell RAID Driver */
 /* Search pattern is "Marwell Connection" as Unicode string */
 const uint8_t msatar_pattern[] = {
-    0x4D, 0x41, 0x52, 0x56, 0x45, 0x4C, 0x4C, 0x20, 0x52, 0x61, 0x69, 0x64
+	0x20, 0x00, 0x52, 0x00, 0x41, 0x00, 0x49, 0x00, 0x44, 0x00, 0x20
 };
 
 #define MSATA_VERSION_OFFSET 56
@@ -334,7 +337,7 @@ int main(int argc, char* argv[])
     
     if (argc < 2)
     {
-        printf("drvver v0.19.6\n");
+        printf("drvver v0.19.8\n");
         printf("Reads versions from input EFI-file\n");
         printf("Usage: drvver DRIVERFILE\n\n");
         printf("Support:\n"
@@ -574,9 +577,9 @@ int main(int argc, char* argv[])
 
 		/* Printing the version found */
 		if (find_pattern(buffer, end, ms_cert_pattern, sizeof(ms_cert_pattern)))
-			wprintf(L"     EFI GOP AMD                - %s_signed\n", build);
+			wprintf(L"     EFI AMD GOP Driver         - %s_signed\n", build);
 		else
-			wprintf(L"     EFI GOP AMD                - %s\n", build);
+			wprintf(L"     EFI AMD GOP Driver         - %s\n", build);
 
 		return ERR_SUCCESS; 
 	}
@@ -699,11 +702,16 @@ int main(int argc, char* argv[])
     if (found)
     {
 		/* Checking for version 4 */
-        if (found[LANI_VERSION_4_OFFSET] == 4)
+       if (found[LANI_VERSION_4_OFFSET] == 4)
             check = found + LANI_VERSION_4_OFFSET;
 		/* Checking for version 5 or 6 */
-        else if (found[LANI_VERSION_5_OFFSET] == 3 || found[LANI_VERSION_5_OFFSET] == 4 || found[LANI_VERSION_5_OFFSET] == 5 || found[LANI_VERSION_5_OFFSET] == 6 || found[LANI_VERSION_5_OFFSET] != 0)
-            check = found + LANI_VERSION_5_OFFSET;
+        else if (found[LANI_VERSION_5_OFFSET] == 3 || found[LANI_VERSION_5_OFFSET] == 4 ||
+		 found[LANI_VERSION_5_OFFSET] == 5 || found[LANI_VERSION_5_OFFSET] == 6 ||
+		 ((found[LANI_VERSION_5_OFFSET-3]  == 0) && (found[LANI_VERSION_5_OFFSET-2]  == 1) &&
+		 (found[LANI_VERSION_5_OFFSET-1]  == 0) && (found[LANI_VERSION_5_OFFSET]  == 0) &&
+		 (found[LANI_VERSION_5_OFFSET+1]  == 0) && (found[LANI_VERSION_5_OFFSET+30]  == 0x2F)) || 
+		found[LANI_VERSION_5_OFFSET]  != 0)
+                check = found + LANI_VERSION_5_OFFSET;
 	else if (find_pattern(buffer, end, lanGB_pattern, sizeof(lanGB_pattern)))
 		{
 		if (found[LANI_VERSION_5_OFFSET] == 0)
@@ -793,11 +801,11 @@ int main(int argc, char* argv[])
 	{
 	check = find_pattern(buffer, end, lanr_new_pattern, sizeof(lanr_new_pattern));
 		if (check[-22] == 0x20)
-		check = check - 22;
+			check = check - 22;
 		else if ((check[-23] == 0x20) || (check[-23] == 0x30))
-		check = check - 23;
+			check = check - 23;
 		else if (check[-11] == 0x20)
-		check = check - 11;
+			check = check - 11;
 	 	else {
 		printf("     Unknown Realtek LAN version.\n");
 		return ERR_NOT_FOUND;}
@@ -806,18 +814,19 @@ int main(int argc, char* argv[])
 	else if (find_pattern(buffer, end, lanr_old_pattern, sizeof(lanr_old_pattern)))
 	{
 	check = find_pattern(buffer, end, lanr_old_pattern, sizeof(lanr_old_pattern));
-		if ((check[-30] == 0x20) || (check[-30] != 0x2F)  || (check[-29] != 0x00) || (check[-31] == 0x00))
-		check = check - 30;
+		if ((check[-30] == 0x20) || (check[-30] != 0x2F)  || 
+		    (check[-29] != 0x00) || (check[-31] == 0x00))
+			check = check - 30;
 		else if (check[-18] == 0x20)
-		check = check - 18;
+			check = check - 18;
 	 	else {
-		printf("     Unknown Realtek LAN version.\n");
+			printf("     Unknown Realtek LAN version.\n");
 		return ERR_NOT_FOUND;}
 	}
 
 	/* Printing the version found */
 	if (check[-2] != 0) {
-		printf("     EFI Realtek UNDI           - %x.%03x %X%s\n", check[0] >> 4, check[-1], check[-2], strb);
+		printf("     EFI Realtek UNDI           - %x.%03X %X%s\n", check[0] >> 4, check[-1], check[-2], strb);
         	return ERR_SUCCESS;}
 	else {
 		printf("     EFI Realtek UNDI           - %x.%03X%s\n", check[0] >> 4, check[-1], strb);
