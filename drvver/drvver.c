@@ -338,7 +338,7 @@ int main(int argc, char* argv[])
     
     if (argc < 2)
     {
-        printf("drvver v0.19.9\n");
+        printf("drvver v0.19.10\n");
         printf("Reads versions from input EFI-file\n");
         printf("Usage: drvver DRIVERFILE\n\n");
         printf("Support:\n"
@@ -431,7 +431,7 @@ int main(int argc, char* argv[])
 
 		/* Checking for version 5 Haswell*/
 		check = found + GOP_VERSION_HSW_OFFSET;
-		if ((check[0] == '5') || (check[0] == 'H') || (check[0] == 0x06))
+		if ((check[0] == '5') || (check[0] == 'H') || ((check[0] == 0x06) && (check[1] == 0x0A)))
 			{
 			check += GOP_MAJOR_LENGTH; 
 			check += GOP_MINOR_LENGTH; 
